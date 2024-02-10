@@ -27,6 +27,9 @@ def deactivate_effect(layer, effect_name):
   send('/composition/layers/{}/video/effects/{}/bypassed'.format(layer, effect_name), 1)
   return
 
+def update_transition_type(layer, val):
+  send('/composition/layers/{}/video/transition/mixer/blendmode'.format(layer), val)
+  return
 
 
 

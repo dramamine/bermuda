@@ -16,11 +16,16 @@ LAYER_BG = 1
 LAYER_MASK = 2
 LAYER_TOP = 3
 
+# trasnsitions that are fun for the bg layer
+t = [1, 3, 8, 10, 12, 13, 15, 17, 18, 19, 21, 31, 39, 46, 48]
+
 # these numbers match up with empty clips in the resolume composition
 v = [0, 17, 26, 29]
 bg_clips_by_intensity = [
   range(v[0]+1, v[1]),
+  range(v[0]+1, v[2]),
   range(v[1]+1, v[2]),
+  range(v[1]+1, v[3]),
   range(v[2]+1, v[3]),
 ]
 
@@ -29,100 +34,185 @@ bg_clips_by_intensity = [
 m = [0, 6, 16, 24]
 mask_clips_by_intensity = [
   range(m[0]+1, m[1]),
+  range(m[0]+1, m[2]),
   range(m[1]+1, m[2]),
+  range(m[1]+1, m[3]),
   range(m[2]+1, m[3]),
 ]
 
 top_clips_by_intensity = [
   range(1, 6),
+  range(1, 11),
   range(6, 11),
+  range(6, 16),
   range(11, 16),
 ]
 
-def triple(str):
-  return [str, str+"2", str+"3"]
+# def triple(str):
+#   return [str, str+"2", str+"3"]
 
-bg_layer_effects = [
-  "slide",
-  "slide2",
-  "slide3",
-  "huerotate",
-  "suckr"
+# bg_layer_effects = [
+#   "slide",
+#   "slide2",
+#   "slide3",
+#   "huerotate",
+#   "suckr"
+# ]
+
+# mask_layer_effects = [
+#   "slide",
+#   "slide2",
+#   "slide3",
+#   # TODO radialmask needs to be paired with one of kaleidoscope(0-2)
+#   # "radialmask",
+#   # triple("displace"),
+#   # triple("distortion"),
+#   "trails",
+#   "ezradialcloner",
+# ]
+
+# top_layer_effects = [
+#   "huerotate",
+# ]
+
+# effects_by_layer = [
+#   bg_layer_effects,
+#   mask_layer_effects,
+#   top_layer_effects
+# ]
+
+# list of tuples (intensity, layer, effect_name)
+effects = [
+  (0, LAYER_BG, "slide"),
+  (0, LAYER_BG, "slide2"),
+  (0, LAYER_BG, "slide3"),
+  (0, LAYER_BG, "huerotate"),
+  (0, LAYER_BG, "suckr"),
+  # placeholder: note that huerotate2 is special and is not in this list
+  (0, LAYER_MASK, "slide"),
+  (0, LAYER_MASK, "slide2"),
+  (0, LAYER_MASK, "slide3"),
+  (0, LAYER_MASK, "radialmask"),
+  (0, LAYER_MASK, "kaleidoscope"),
+  (1, LAYER_MASK, "kaleidoscope2"),
+  (2, LAYER_MASK, "kaleidoscope3"),
+  (0, LAYER_MASK, "ezradialcloner"),
+  (0, LAYER_MASK, "displace"),
+  (1, LAYER_MASK, "displace2"),
+  (2, LAYER_MASK, "displace3"),
+  (0, LAYER_MASK, "distortion"),
+  (1, LAYER_MASK, "distortion2"),
+  (2, LAYER_MASK, "distortion3"),
+  (2, LAYER_MASK, "trails"),
 ]
 
-mask_layer_effects = [
-  "slide",
-  "slide2",
-  "slide3",
-  # TODO radialmask needs to be paired with one of kaleidoscope(0-2)
-  # "radialmask",
-  # triple("displace"),
-  # triple("distortion"),
-  "trails",
-  "ezradialcloner",
+# get the effects above where the intensity is 0
+effects_by_intensity = [
+  [e for e in effects if e[0] == 0],
+  [e for e in effects if e[0] == 1],
+  [e for e in effects if e[0] == 2],
 ]
 
-top_layer_effects = [
-  "huerotate",
-]
-
-effects_by_layer = [
-  bg_layer_effects,
-  mask_layer_effects,
-  top_layer_effects
-]
 
 IntensityTemplate = namedtuple('IntensityTemplate', [
   "active_layers",
   "clip_intensity",
-  "effect_count",
-  "effect_intensity"
+  "effect_count_by_intensity",
 ])
 
+# TODO need more intesnisities with just the first layer. maybe 0-4?
+# TODO intensity_templates still unused
 intensity_templates = [
-  [IntensityTemplate(1, 0, 0, 0)],
-  [IntensityTemplate(2, 0, 0, 0)],
-  [IntensityTemplate(2, 1, 0, 0)],
-  [IntensityTemplate(2, 1, 1, 0)],
+  [IntensityTemplate(1, 0, (0, 0, 0))],
+  [IntensityTemplate(2, 0, (0, 0, 0))],
+  [IntensityTemplate(2, 1, (0, 0, 0))],
+  [IntensityTemplate(2, 1, (1, 0, 0))],
 
   [
-    IntensityTemplate(2, 1, 1, 1),
-    IntensityTemplate(2, 1, 2, 0),
-    IntensityTemplate(2, 2, 1, 0),
+    IntensityTemplate(2, 1, (0, 1, 0)),
+    IntensityTemplate(2, 1, (2, 0, 0)),
+    IntensityTemplate(2, 2, (1, 0, 0)),
   ],
 
   [
-    IntensityTemplate(2, 1, 2, 1),
-    IntensityTemplate(2, 2, 1, 1),
-    IntensityTemplate(2, 2, 2, 0),
+    IntensityTemplate(2, 1, (1, 1, 0)),
+    IntensityTemplate(2, 2, (0, 1, 0)),
+    IntensityTemplate(2, 2, (2, 0, 0)),
   ],
 
   [
-    IntensityTemplate(2, 2, 2, 1),
+    IntensityTemplate(2, 2, (1, 1, 0)),
   ],
 
   [
-    IntensityTemplate(2, 2, 2, 2),
+    IntensityTemplate(2, 2, (0, 2, 0)),
+    IntensityTemplate(2, 2, (0, 0, 1)),
   ],
 
   [
-    IntensityTemplate(3, 0, 1, 0),
+    IntensityTemplate(3, 0, (1, 0, 0)),
   ],
 
   [
-    IntensityTemplate(3, 1, 1, 0),
-    IntensityTemplate(3, 0, 1, 1),
+    IntensityTemplate(3, 1, (1, 0, 0)),
+    IntensityTemplate(3, 0, (0, 1, 0)),
   ],
 
-  [IntensityTemplate(3, 1, 2, 1)],
-  [IntensityTemplate(3, 2, 2, 1)],
-  [IntensityTemplate(3, 3, 2, 1)],
-  [IntensityTemplate(3, 3, 3, 1)],
-  [IntensityTemplate(3, 4, 3, 1)],
-  [IntensityTemplate(3, 4, 4, 2)],
-  [IntensityTemplate(3, 5, 4, 2)],
-  [IntensityTemplate(3, 5, 4, 3)],
-  [IntensityTemplate(3, 5, 5, 3)],
+  [
+    IntensityTemplate(3, 1, (2, 0, 0)),
+    IntensityTemplate(3, 1, (2, 1, 0)),
+  ],
+
+  [
+    IntensityTemplate(3, 2, (1, 1, 0))
+  ],
+
+  [
+    IntensityTemplate(3, 3, (1, 1, 0))
+  ],
+
+  [
+    IntensityTemplate(3, 3, (2, 1, 0))
+  ],
+
+  [
+    IntensityTemplate(3, 3,  (3, 1, 0))
+  ],
+
+  [
+      IntensityTemplate(3, 3,  (4, 1, 0)),
+      IntensityTemplate(3, 3,  (4, 0, 1)),
+      IntensityTemplate(3, 3,  (3, 1, 1)),
+  ],
+
+  [
+      IntensityTemplate(3, 4,  (3, 1, 0)),
+      IntensityTemplate(3, 4,  (3, 0, 1)),
+      IntensityTemplate(3, 4,  (2, 1, 1)),
+  ],
+
+  [
+      IntensityTemplate(3, 4,  (4, 1, 0)),
+      IntensityTemplate(3, 4,  (4, 0, 1)),
+      IntensityTemplate(3, 4,  (3, 1, 1)),
+  ],
+
+  [
+      IntensityTemplate(3, 4,  (5, 1, 0)),
+      IntensityTemplate(3, 4,  (5, 0, 1)),
+      IntensityTemplate(3, 4,  (4, 1, 1)),
+      IntensityTemplate(3, 4,  (4, 2, 0)),
+      IntensityTemplate(3, 4,  (4, 1, 1)),
+      IntensityTemplate(3, 4,  (3, 2, 1)),
+  ],
+
+  [
+      IntensityTemplate(3, 5,  (3, 1, 0)),
+      IntensityTemplate(3, 5,  (3, 0, 1)),
+      IntensityTemplate(3, 5,  (2, 1, 1)),
+  ],
+
+
 ]
 
 
@@ -199,7 +289,10 @@ class ActiveStuff:
     self.mb = mb
 
   def prepare(self):
-    # TODO maybe set transitions here.
+    print("using template:", self.mb)
+
+    # set transition mode
+    resolume_commands.update_transition_type(LAYER_BG, random.choice(t))
 
     clips_intensity = get_clips_intensity(self.mb.active_layers, self.mb.clip_intensity)
     clips = []
@@ -213,11 +306,17 @@ class ActiveStuff:
     # effect_intensities = get_array_with_total(self.mb.effect_count, self.mb.effect_intensity, 2)
 
     fx = []
-    for i in range(self.mb.effect_count):
-      layer = random.randint(0, self.mb.active_layers-1)
-      options = effects_by_layer[layer]
-      chosen_effect = random.choice(options)
-      fx.append( (layer+1, chosen_effect) )
+    # for i in range(self.mb.effect_count):
+    #   layer = random.randint(0, self.mb.active_layers-1)
+    #   options = effects_by_layer[layer]
+    #   chosen_effect = random.choice(options)
+    #   fx.append( (layer+1, chosen_effect) )
+    effect_count_by_intensity = self.mb.effect_count_by_intensity
+    for i in range(3):
+      for j in range(effect_count_by_intensity[i]):
+        chosen_effect = random.choice(effects_by_intensity[i])
+        fx.append(chosen_effect)
+
 
     self.fx = fx
 
@@ -234,8 +333,8 @@ class ActiveStuff:
       # activate fx
       for f in self.fx:
         # TODO call resolume about this
-        print("activate layer {} fx {}".format(f[0], f[1]))
-        resolume_commands.activate_effect(f[0], f[1])
+        print("activate layer {} fx {}".format(f[1], f[2]))
+        resolume_commands.activate_effect(f[1], f[2])
 
       self.pretty_print()
       return
@@ -287,14 +386,13 @@ class ActiveStuff:
   def pretty_print(self):
     global effects_state
 
-    mb_string = "active_layers: {}, clip_intensity: {}, effect_count: {}, effect_intensity: {}".format(
+    mb_string = "active_layers: {}, clip_intensity: {}, effect_count_by_intensity: {}".format(
       self.mb.active_layers,
       self.mb.clip_intensity,
-      self.mb.effect_count,
-      self.mb.effect_intensity
+      self.mb.effect_count_by_intensity,
     )
     clips_string = "CLIPS:" + ", ".join(["({}, {})".format(c[0], c[1]) for c in self.clips])
-    fx_string = "FX:" + ", ".join(["({}, {})".format(f[0], f[1]) for f in self.fx])
+    fx_string = "FX:" + ", ".join(["({}, {}, {})".format(f[0], f[1], f[2]) for f in self.fx])
 
     effects_state = "\n".join([mb_string, clips_string, fx_string])
     return effects_state
@@ -308,13 +406,21 @@ class ActiveStuff:
       resolume_commands.deactivate_effect(f[0], f[1])
     return
 
-ast = ActiveStuff(IntensityTemplate(2, 0, 1, 0))
+ast = ActiveStuff(IntensityTemplate(2, 0, (1, 0, 0)))
 
 def demo_update():
   global ast
   print("demo_update called")
   # ast.load(intensity_templates[0])
   ast.deactivate()
+
+  # read intensity
+  i = int( op('intensity_chop').rows()[0][0].val )
+  print(i)
+
+  # pick a template
+  ast.load( random.choice(intensity_templates[i]) )
+
   ast.prepare()
   ast.activate()
   return
@@ -326,11 +432,10 @@ def full_reset():
 
   resolume_commands.clear()
 
-  for i in range(0, len(effects_by_layer)):
-    for effect_name in effects_by_layer[i]:
-      resolume_commands.deactivate_effect(i+1, effect_name)
-    # for effect_name in effects_by_layer[i]:
-    #   resolume_commands.deactivate_effect(i+1, effect_name)
+  for f in effects:
+    resolume_commands.deactivate_effect(f[1], f[2])
+  # for effect_name in effects_by_layer[i]:
+  #   resolume_commands.deactivate_effect(i+1, effect_name)
 
   return
 
@@ -380,8 +485,9 @@ def full_reset():
 # ]
 
 def set_intensity(num):
-  # global intensity
-  # intensity = num
+  print("intensity updated:", num)
+  global intensity
+  intensity = num
   return
 
 
