@@ -12,7 +12,7 @@ def onValueChange(par, prev):
 	if par.eval():
 		print("toggled on")
 		# turn off external audio
-		op('/project1/ui_container/audio_container/audio_toggle_exec').par.Value0 = False
+		op('/project1/ui_container/audio_container/toggle').par.Value0 = False
 		scripts.play_song()
 	else:
 		print("toggled off")

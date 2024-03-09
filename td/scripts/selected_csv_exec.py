@@ -15,7 +15,7 @@ current_event_ts = '0.000'
 def onRowChange(dat, rows):
 	print("selected_csv_exec::row has changed.", rows)
 
-	is_toggle_on = op('./playlist_toggle').par.Value0.eval()
+	is_toggle_on = op('./toggle').par.Value0.eval()
 	if not is_toggle_on:
 		return
 

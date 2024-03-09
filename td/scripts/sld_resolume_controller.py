@@ -87,8 +87,34 @@ effects = [
   (0, LAYER_BG, "slide2"),
   (0, LAYER_BG, "slide3"),
   (0, LAYER_BG, "huerotate"),
-  (0, LAYER_BG, "suckr"),
   # placeholder: note that huerotate2 is special and is not in this list
+  (0, LAYER_BG, "suckr"),
+  (0, LAYER_BG, "threshold"),
+  # TODO below: update intensity where needed
+  (0, LAYER_BG, "vignette"),
+  (0, LAYER_BG, "blow"),
+  (0, LAYER_BG, "edgedetection"),
+  (0, LAYER_BG, "ezradialcloner"),
+  (0, LAYER_BG, "ezradialcloner2"),
+  (0, LAYER_BG, "goo"),
+  (0, LAYER_BG, "gridcloner"),
+  (0, LAYER_BG, "heat"),
+  (0, LAYER_BG, "heat2"),
+  (0, LAYER_BG, "infinitezoom"),
+  (0, LAYER_BG, "infinitezoom2"),
+  (0, LAYER_BG, "kaleidoscope"),
+  (0, LAYER_BG, "kaleidoscope2"),
+  (0, LAYER_BG, "kaleidoscope3"),
+  (0, LAYER_BG, "linearcloner"),
+  (0, LAYER_BG, "metashape"),
+  (0, LAYER_BG, "mirror"),
+  (0, LAYER_BG, "pointgrid"),
+  (0, LAYER_BG, "polarkaleido"),
+  (0, LAYER_BG, "polarkaleido2"),
+  (0, LAYER_BG, "polarkaleido3"),
+  (0, LAYER_BG, "polarkaleido4"),
+  (0, LAYER_BG, "polarkaleido5"),
+
   (0, LAYER_MASK, "slide"),
   (0, LAYER_MASK, "slide2"),
   (0, LAYER_MASK, "slide3"),
@@ -481,13 +507,6 @@ def on_bpm_change(bpm, restart_section = True):
 def on_section_timer_complete():
   print("on_section_timer_complete called")
   ast.increment_section()
-  return
-
-# updates UI element with correct bpm
-def update_bpm(bpm, restart_section = True):
-  print("DEPRECATED, use on_bpm_change instead")
-  op('/project1/ui_container/resolume_container/bpm').par.Value0 = bpm
-
   return
 
 
