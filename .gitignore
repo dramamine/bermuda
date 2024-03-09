@@ -8,3 +8,11 @@ td/video/*
 *.avi
 *.mp4
 *.mov
+td/BermudaTimeline.toe
+td/BermudaVideoMidi.toe
+td/LightdreamTimeline.toe
+td/SuperLightdream.toe
+td/playlists/default/*
+td/playlists/lightdream/*
+td/LightdreamTimeline.toe
+td/SuperLightdream.toe
