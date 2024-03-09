@@ -4,18 +4,17 @@
 # prev - the previous value
 #
 # Make sure the corresponding toggle is enabled in the Parameter Execute DAT.
-import sld_resolume_commands as resolume_commands
-
 
 def onValueChange(par, prev):
-	print("sld_generic_par_exec_handler::DEPRECATED: value change:", par.eval(), par, prev)
 	# use par.eval() to get current value
-	# print("value change:", par.eval())
-	if par.eval() == False:
-		return
-	# resolume_commands.heartbeat()
-	# resolume_commands.first_layer_only_instant_fadeout_others()
-	# resolume_commands.add_mask()
+	print(par.eval())
+
+	if (par.eval() == True):
+		# turn off internal playlist audio
+		op('/project1/ui_container/playlist_container/playlist_toggle_exec').par.Value0 = False
+		op('audiodevin1').bypass = 0
+	else:
+		op('audiodevin1').bypass = 1
 
 	return
 
@@ -24,17 +23,14 @@ def onValueChange(par, prev):
 
 
 def onValuesChanged(changes):
-	print("sld_generic_par_exec_handler::DEPRECATED: values changed")
 	for c in changes:
 		# use par.eval() to get current value
 		par = c.par
 		prev = c.prev
-		print("onValuesChanged called.", par, prev)
 	return
 
 
 def onPulse(par):
-	print("onPulse called.")
 	return
 
 

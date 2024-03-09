@@ -336,6 +336,8 @@ class ActiveStuff:
         print("activate layer {} fx {}".format(f[1], f[2]))
         resolume_commands.activate_effect(f[1], f[2])
 
+      # @TODO set a timer based on BPM to increment the section.
+
       self.pretty_print()
       return
 
@@ -439,6 +441,19 @@ def full_reset():
 
   return
 
+def on_bpm_change(bpm):
+  resolume_commands.update_bpm(bpm)
+  return
+
+# updates UI element with correct bpm
+def update_bpm(bpm):
+  print("resolume_controller::update_bpm called")
+  op('/project1/ui_container/resolume_container/bpm').par.Value0 = bpm
+
+  return
+
+
+
 # def choose_and_activate_template(intensity):
 #   print("using intensity", intensity)
 #   # choose a pattern
@@ -490,6 +505,19 @@ def set_intensity(num):
   intensity = num
   return
 
+def choose_intensity(num):
+  set_intensity(num)
+  ast.load( random.choice( intensity_templates[num] ))
+  ast.prepare()
+  return
+
+def activate():
+  ast.activate()
+  return
+
+def set_transition_type(a, b):
+  print("TODO transition type not implemented")
+  return
 
 # old
 # def update_section(num):
@@ -500,6 +528,7 @@ def set_intensity(num):
 
 # handler for the button to increment section
 def increment_section():
+  print("increment section called.")
   ast.increment_section()
 
   # old
