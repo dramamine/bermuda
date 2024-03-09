@@ -339,10 +339,18 @@ class ActiveStuff:
       # @TODO set a timer based on BPM to increment the section.
 
       self.pretty_print()
+      self.start_section_timer()
       return
+  def start_section_timer(self):
+      bpm = op('/project1/ui_container/resolume_container/bpm').par.Value0
+      print("resetting timer with bpm", bpm)
+      timer_length = (32 * 60) / bpm
+      op('section_timer').par.length = timer_length
+      op('section_timer').par.start.pulse()
 
   def increment_section(self):
     self.section = (self.section + 1) % NUM_SECTIONS
+    print("increment_section called, its now:", self.section)
     op('section').par.Value0 = self.section
 
     # switch statement based on section
@@ -410,6 +418,19 @@ class ActiveStuff:
 
 ast = ActiveStuff(IntensityTemplate(2, 0, (1, 0, 0)))
 
+def load_pattern_and_play():
+  full_reset()
+
+  i = int( op('intensity_chop').rows()[0][0].val )
+  print("load_pattern_and_play with intensity: ", i)
+
+  # pick a template
+  ast.load( random.choice(intensity_templates[i]) )
+
+  ast.prepare()
+  ast.activate()
+  return
+
 def demo_update():
   global ast
   print("demo_update called")
@@ -439,15 +460,32 @@ def full_reset():
   # for effect_name in effects_by_layer[i]:
   #   resolume_commands.deactivate_effect(i+1, effect_name)
 
+  # reset section timer
+
+  op('section_timer').par.initialize.pulse()
+
   return
 
-def on_bpm_change(bpm):
+def on_bpm_change(bpm, restart_section = True):
+  print("resolume_controller::update_bpm called")
   resolume_commands.update_bpm(bpm)
+
+  if restart_section:
+    print("restart section")
+
+
+    load_pattern_and_play()
+
+  return
+
+def on_section_timer_complete():
+  print("on_section_timer_complete called")
+  ast.increment_section()
   return
 
 # updates UI element with correct bpm
-def update_bpm(bpm):
-  print("resolume_controller::update_bpm called")
+def update_bpm(bpm, restart_section = True):
+  print("DEPRECATED, use on_bpm_change instead")
   op('/project1/ui_container/resolume_container/bpm').par.Value0 = bpm
 
   return
