@@ -9,21 +9,33 @@
 # Make sure the corresponding toggle is enabled in the DAT Execute DAT.
 #
 # If rows or columns are deleted, sizeChange will be called instead of row/col/cellChange.
+import re
 current_event_ts = '0.000'
-
 
 def onRowChange(dat, rows):
 	print("selected_csv_exec::row has changed.", rows)
 
-	is_toggle_on = op('./toggle').par.Value0.eval()
+	is_toggle_on = op('toggle').par.Value0.eval()
 	if not is_toggle_on:
 		return
 
-	print(dat[1, 1])
-	path = str(dat[1, 1])
-	mp3_path = path.replace("csv", "mp3")
+	print("music path:", dat[1, 1])
+	mp3_path = str(dat[1, 1])
+	# mp3_path = path.replace("csv", "mp3")
 	op('audiofilein1').par.file = mp3_path
+
+
+	csv_path = re.sub(
+		r'/\d{2}\s',
+		"/",
+		re.sub(
+			r'(mp3|m4a)',
+			"csv",
+			mp3_path
+		)
+	)
 	play_song()
+	op('text1').par.file = csv_path
 
 	return
 
@@ -54,12 +66,15 @@ def do_current_action():
 		value2 = op('text1')[i, 3]
 		if current_action == "set_intensity":
 			mod("/project1/ui_container/resolume_container/sld_resolume_controller").choose_intensity(int(value1))
-			mod("/project1/ui_container/resolume_container/sld_resolume_controller").activate()
+			mod("/project1/ui_container/resolume_container/sld_resolume_controller").load_pattern_and_play()
 		elif current_action == "set_transition_type":
 			# @TODO make sure this doesn't conflict with set_intensity, otherwise might need to sandwich it between choose_intensity & activate
 			mod("/project1/ui_container/resolume_container/sld_resolume_controller").set_transition_type("TODO", "TODO")
 		elif current_action == "set_bpm":
-			mod("/project1/ui_container/resolume_container/sld_resolume_controller").update_bpm(int(value1))
+			mod("/project1/ui_container/resolume_container/sld_resolume_controller").on_bpm_change(int(value1))
+		elif current_action == "end":
+			print("TODO NEEDS TESTING: implement next track behavior")
+			mod("/project1/ui_container/playlist_countainer/playlist_container/playlist_music_exec").next_track()
 
 	return
 

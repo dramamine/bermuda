@@ -445,7 +445,8 @@ class ActiveStuff:
 ast = ActiveStuff(IntensityTemplate(2, 0, (1, 0, 0)))
 
 def load_pattern_and_play():
-  full_reset()
+  # TODO better reset?
+  # full_reset()
 
   i = int( op('intensity_chop').rows()[0][0].val )
   print("load_pattern_and_play with intensity: ", i)
@@ -457,32 +458,19 @@ def load_pattern_and_play():
   ast.activate()
   return
 
-def demo_update():
-  global ast
-  print("demo_update called")
-  # ast.load(intensity_templates[0])
-  ast.deactivate()
-
-  # read intensity
-  i = int( op('intensity_chop').rows()[0][0].val )
-  print(i)
-
-  # pick a template
-  ast.load( random.choice(intensity_templates[i]) )
-
-  ast.prepare()
-  ast.activate()
-  return
-
 def full_reset():
   global ast
-  print("full_reset called")
-  ast.deactivate()
+  print("full_reset called. TODO skipping deactivate effects for now")
+  # ast.deactivate()
 
   resolume_commands.clear()
 
-  for f in effects:
-    resolume_commands.deactivate_effect(f[1], f[2])
+  # TODO need to deactivate effects
+  # all effects off
+  # for f in effects:
+  #   resolume_commands.deactivate_effect(f[1], f[2])
+
+  # all active effects off
   # for effect_name in effects_by_layer[i]:
   #   resolume_commands.deactivate_effect(i+1, effect_name)
 
@@ -508,53 +496,6 @@ def on_section_timer_complete():
   print("on_section_timer_complete called")
   ast.increment_section()
   return
-
-
-
-# def choose_and_activate_template(intensity):
-#   print("using intensity", intensity)
-#   # choose a pattern
-#   assert intensity < len(intensity_templates), "intensity out of range"
-#   ast.deactivate()
-
-#   pattern = random.choice(intensity_templates[intensity])
-#   ast.load(pattern)
-#   ast.prepare()
-#   ast.activate()
-#   return
-
-
-# # some range
-# intensity = 0
-
-# # section of song; 0-3
-# section = 0
-
-# active_template_fn = None
-
-# # first_layer_ranges = {
-# #   'light': range(1, 5)
-# # }
-
-# transitions = []
-
-# def gradually_add_mask():
-#   print("gradually_add_mask called")
-#   if section == 0:
-#     # update transition
-#     resolume_commands.update_transition_time(LAYER_BG, 2.0)
-#     resolume_commands.update_blend_mode(LAYER_BG, 10)
-
-#     range = first_layer_ranges['light']
-#     idx = random.choice(range)
-#     resolume_commands.first_layer_only_instant_fadeout_others(idx)
-#   return
-
-
-
-# allowed_templates_by_intensity = [
-#   [gradually_add_mask]
-# ]
 
 def set_intensity(num):
   print("intensity updated:", num)
