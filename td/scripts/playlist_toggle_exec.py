@@ -10,11 +10,11 @@ import selected_csv_exec as scripts
 def onValueChange(par, prev):
 	# use par.eval() to get current value
 	if par.eval():
-		print("toggled on")
+		print("playlist_toggle_exec::toggled on")
 		# turn off external audio
 		op('/project1/ui_container/audio_container/toggle').par.Value0 = False
 		scripts.play_song()
 	else:
-		print("toggled off")
+		print("playlist_toggle_exec::toggled off")
 		scripts.reset_timecode()
 	return

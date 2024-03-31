@@ -15,14 +15,14 @@ is_ordered = False
 current_idx = 1
 def onTableChange(dat):
   global is_ordered, current_idx
-  print("playlist_script::table has changed.")
+  print("playlist_music_exec::table has changed.")
   if (str(dat[1,0]).startswith("01 ")):
-    print("playlist_script::ordered playlist")
+    print("playlist_music_exec::ordered playlist")
     is_ordered = True
     current_idx = 1
     pickFirstTrack()
   else:
-    print("playlist_script::random playlist")
+    print("playlist_music_exec::random playlist")
     is_ordered = False
     pickRandomTrack()
   return
@@ -68,6 +68,7 @@ def pickNextTrack():
   return
 
 def pickRandomTrack():
+  print("playlist_music_exec::pickRandomTrack")
   rows = op('playlist_folder_musics').numRows
   if rows <= 1:
     return
@@ -77,7 +78,7 @@ def pickRandomTrack():
   options = list(filter(lambda x: x != selected, range(1, rows)))
   chosen_idx = random.choice(options)
   chosen_value = op('playlist_folder_musics')[chosen_idx, 0]
-  print(rows, selected, options, chosen_idx, chosen_value)
+  # print(rows, selected, options, chosen_idx, chosen_value)
   op('music_dropdown').par.Value0 = chosen_value
   return
 

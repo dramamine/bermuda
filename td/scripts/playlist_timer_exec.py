@@ -10,7 +10,7 @@ import selected_csv_exec as scripts
 
 
 def onDone(timerOp, segment, interrupt):
-	print(timerOp.runningSeconds, 'playlist_timer::onDone() segment', segment)
+	print('playlist_timer::onDone() segment', segment)
 	scripts.do_current_action()
 	scripts.load_next_timer()
 

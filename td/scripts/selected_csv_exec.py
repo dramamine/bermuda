@@ -19,7 +19,6 @@ def onRowChange(dat, rows):
 	if not is_toggle_on:
 		return
 
-	print("music path:", dat[1, 1])
 	mp3_path = str(dat[1, 1])
 	# mp3_path = path.replace("csv", "mp3")
 	op('audiofilein1').par.file = mp3_path
@@ -55,7 +54,7 @@ def reset_timecode():
 
 def do_current_action():
 	global current_event_ts
-	print("current action")
+	# print("selected_csv_exec:current action")
 	for i in range(1, op('text1').numRows):
 		event_ts = op('text1')[i, 0]
 		if (current_event_ts != event_ts):
@@ -71,7 +70,9 @@ def do_current_action():
 			# @TODO make sure this doesn't conflict with set_intensity, otherwise might need to sandwich it between choose_intensity & activate
 			mod("/project1/ui_container/resolume_container/sld_resolume_controller").set_transition_type("TODO", "TODO")
 		elif current_action == "set_bpm":
+			op("/project1/ui_container/resolume_container/bpm").par.Value0 = int(value1)
 			mod("/project1/ui_container/resolume_container/sld_resolume_controller").on_bpm_change(int(value1))
+
 		elif current_action == "end":
 			print("TODO NEEDS TESTING: implement next track behavior")
 			mod("/project1/ui_container/playlist_countainer/playlist_container/playlist_music_exec").next_track()
@@ -83,13 +84,13 @@ def load_next_timer(use_zero=False):
 	global current_event_ts
 	# read timestamp
 	ts = 0 if use_zero else op('timecode1')['total_seconds']
-	print("ts:", ts)
+	# print("selected_csv_exec:ts:", ts)
 
 	# get next upcoming event
 	for i in range(1, op('text1').numRows):
 		event_ts = float(op('text1')[i, 0])
 		if event_ts > ts + 0.005:
-			print("next event:", event_ts)
+			# print("selected_csv_exec:next event:", event_ts)
 			current_event_ts = op('text1')[i, 0]
 
 			# set timer

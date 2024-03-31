@@ -8,11 +8,11 @@
 # Make sure the corresponding toggle is enabled in the CHOP Execute DAT.
 import sld_resolume_controller
 def onStart(x):
-	print("section_timer::started")
+	print("section_timer_exec::started")
 	return
 
 def onDone(x, y, z):
-	print("section_timer::done")
+	print("section_timer_exec::done")
 	return
 
 def onOffToOn(channel, sampleIndex, val, prev):
@@ -28,7 +28,7 @@ def whileOff(channel, sampleIndex, val, prev):
 	return
 
 def onValueChange(channel, sampleIndex, val, prev):
-	print("section_timer::onValueChange called. val:", val, "prev:", prev)
+	print("section_timer_exec::onValueChange called. val:", val, "prev:", prev)
 	if val >= 1:
 		sld_resolume_controller.on_section_timer_complete()
 		op('section_timer').par.initialize.pulse()

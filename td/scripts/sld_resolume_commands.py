@@ -13,7 +13,18 @@ LAYER_TOP = 3
 
 def send(loc, val):
   op('resolume').sendOSC(loc, [val])
+  return
 
+def test_pattern(on):
+  if on:
+    send('/composition/layers/7/clips/2/connect', 1)
+  else:
+    send('/composition/layers/7/clips/1/connect', 1)
+  return
+
+def set_dashboard_value(layer, linkid, val):
+  send('/composition/layers/{}/dashboard/link{}'.format(layer, linkid), val)
+  return
 
 def activate_clip(layer, column_id):
   send('/composition/layers/{}/clips/{}/connect'.format(layer, column_id), 1)
@@ -49,7 +60,7 @@ def do_autopilot(yes):
 
 # update transition time for bg layer. value given in seconds
 def update_transition_time(layer, val):
-  print("updating duration:", layer, val)
+  print("sld_resolume_commands::updating duration:", layer, val)
   send("/composition/layers/{}/transition/duration".format(layer), val/10)
   return
 
@@ -76,28 +87,9 @@ def clear():
   send('/composition/layers/4/clear', 0)
   return
 
-# clears any active pulses
-
-
-# def pulse_clear():
-#   send("/composition/layers/{}/clear".format(layer_pulses), 1)
-#   send("/composition/layers/{}/clear".format(layer_pulses), 0)
-#   return
-
-
-# def pulse_hit(column):
-#   send("/composition/layers/{}/clips/{}/connect".format(layer_pulses, column), 1)
-#   return
-
-
-# def set_pulse_playback_direction(column, reversed):
-#   val = 0 if reversed else 2
-#   send("/composition/layers/{}/clips/{}/transport/position/behaviour/playdirection".format(layer_pulses, column), val)
-#   return
-
 # @deprecated?
 def update_tempo(bpm):
-  print("DEPRECATED::updating tempo:", bpm)
+  print("sld_resolume_commands::DEPRECATED::updating tempo:", bpm)
   send('/composition/tempocontroller/tempo', bpm)
   return
 
@@ -123,7 +115,7 @@ def heartbeat():
 
 
 def first_layer_only_instant_fadeout_others(first_clip_idx = 1):
-  print("first_layer_only_instant_fadeout_others")
+  print("sld_resolume_commands::first_layer_only_instant_fadeout_others")
   send('/composition/layers/2/clear', 0)
   send('/composition/layers/3/clear', 0)
   send('/composition/layers/4/clear', 0)

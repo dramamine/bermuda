@@ -85,23 +85,23 @@ top_clips_by_intensity = [
 effects = [
   (0, LAYER_BG, "slide"),
   (0, LAYER_BG, "slide2"),
-  (0, LAYER_BG, "slide3"),
+  (0, LAYER_BG, "slide3"), # audio-reactive
   (0, LAYER_BG, "huerotate"),
   # placeholder: note that huerotate2 is special and is not in this list
   (0, LAYER_BG, "suckr"),
-  (0, LAYER_BG, "threshold"),
-  # TODO below: update intensity where needed
-  (0, LAYER_BG, "vignette"),
-  (0, LAYER_BG, "blow"),
+  (0, LAYER_BG, "threshold"),  # audio-reactive
+
+  (0, LAYER_BG, "vignette"),  # audio-reactive
+  (0, LAYER_BG, "blow"),  # audio-reactive
   (0, LAYER_BG, "edgedetection"),
   (0, LAYER_BG, "ezradialcloner"),
   (0, LAYER_BG, "ezradialcloner2"),
   (0, LAYER_BG, "goo"),
   (0, LAYER_BG, "gridcloner"),
-  (0, LAYER_BG, "heat"),
-  (0, LAYER_BG, "heat2"),
+  (0, LAYER_BG, "heat"),  # audio-reactive
+  (0, LAYER_BG, "heat2"),  # audio-reactive
   (0, LAYER_BG, "infinitezoom"),
-  (0, LAYER_BG, "infinitezoom2"),
+  (0, LAYER_BG, "infinitezoom2"),  # audio-reactive
   (0, LAYER_BG, "kaleidoscope"),
   (0, LAYER_BG, "kaleidoscope2"),
   (0, LAYER_BG, "kaleidoscope3"),
@@ -115,7 +115,7 @@ effects = [
   (0, LAYER_BG, "polarkaleido4"),
   (0, LAYER_BG, "polarkaleido5"),
 
-  (0, LAYER_MASK, "slide"),
+  (0, LAYER_MASK, "slide"),  # audio-reactive
   (0, LAYER_MASK, "slide2"),
   (0, LAYER_MASK, "slide3"),
   (0, LAYER_MASK, "radialmask"),
@@ -123,12 +123,12 @@ effects = [
   (1, LAYER_MASK, "kaleidoscope2"),
   (2, LAYER_MASK, "kaleidoscope3"),
   (0, LAYER_MASK, "ezradialcloner"),
-  (0, LAYER_MASK, "displace"),
-  (1, LAYER_MASK, "displace2"),
-  (2, LAYER_MASK, "displace3"),
-  (0, LAYER_MASK, "distortion"),
-  (1, LAYER_MASK, "distortion2"),
-  (2, LAYER_MASK, "distortion3"),
+  (0, LAYER_MASK, "displace"),  # audio-reactive
+  (1, LAYER_MASK, "displace2"), # audio-reactive
+  (2, LAYER_MASK, "displace3"),  # audio-reactive
+  (0, LAYER_MASK, "distortion"), # audio-reactive
+  (1, LAYER_MASK, "distortion2"),  # audio-reactive
+  (2, LAYER_MASK, "distortion3"),  # audio-reactive
   (2, LAYER_MASK, "trails"),
 ]
 
@@ -307,6 +307,8 @@ class ActiveStuff:
 
     self.section = 0
 
+    self.use_dashboard_over_audio_reactive = False
+
     # some random number to decide what to do with the section changes
     # TODO hardcoded to 0 for now for huerotate on BG layer
     self.incremental_section_effect = 0
@@ -315,7 +317,6 @@ class ActiveStuff:
     self.mb = mb
 
   def prepare(self):
-    print("using template:", self.mb)
 
     # set transition mode
     resolume_commands.update_transition_type(LAYER_BG, random.choice(t))
@@ -328,9 +329,12 @@ class ActiveStuff:
       clips.append( (i+1, chosen_clip) )
     self.clips = clips
 
+    if len(self.clips) < 1:
+      print("ERROR: weird, clips was empty.", self.mb.active_layers, self.mb.clip_intensity, clips_intensity, clips)
+
     # TODO intensity
     # effect_intensities = get_array_with_total(self.mb.effect_count, self.mb.effect_intensity, 2)
-
+    self.deactivate_all_fx()
     fx = []
     # for i in range(self.mb.effect_count):
     #   layer = random.randint(0, self.mb.active_layers-1)
@@ -352,14 +356,15 @@ class ActiveStuff:
     return
 
   def activate(self):
-      print("activating...")
       for c in self.clips:
-        print("activate layer {} clip {}".format(c[0], c[1]))
+        print(
+            "sld_resolume_controller::activate layer {} clip {}".format(c[0], c[1]))
         resolume_commands.activate_clip(c[0], c[1])
       # activate fx
       for f in self.fx:
         # TODO call resolume about this
-        print("activate layer {} fx {}".format(f[1], f[2]))
+        print(
+            "sld_resolume_controller::activate layer {} fx {}".format(f[1], f[2]))
         resolume_commands.activate_effect(f[1], f[2])
 
       # @TODO set a timer based on BPM to increment the section.
@@ -369,14 +374,14 @@ class ActiveStuff:
       return
   def start_section_timer(self):
       bpm = op('/project1/ui_container/resolume_container/bpm').par.Value0
-      print("resetting timer with bpm", bpm)
+      print("sld_resolume_controller::resetting timer with bpm", bpm)
       timer_length = (32 * 60) / bpm
       op('section_timer').par.length = timer_length
       op('section_timer').par.start.pulse()
 
   def increment_section(self):
     self.section = (self.section + 1) % NUM_SECTIONS
-    print("increment_section called, its now:", self.section)
+    # print("sld_resolume_controller::increment_section called, its now:", self.section)
     op('section').par.Value0 = self.section
 
     # switch statement based on section
@@ -392,12 +397,17 @@ class ActiveStuff:
             "/composition/layers/1/video/effects/huerotate2/effect/huerotate", 0.0
           )
         # FUN INFO: in Resolume, set the effect Start Settings -> Clip Trigger OFF to prevent re-animation when switching clips
-        print("added huerotate2 to top layer since we incremented section")
+        # print("sld_resolume_controller::added huerotate2 to top layer since we incremented section")
     elif self.section == 2:
       # update bg clip
-      print("clips was:", self.clips[0])
+      if len(self.clips) < 1:
+        print("ERROR: found the issue. self.clips is empty")
+      else:
+        print("sld_resolume_controller::clips was:", self.clips[0])
+
 
       clips_intensity = get_clips_intensity(self.mb.active_layers, self.mb.clip_intensity)
+      print("DEBUG: section 2:", clips_intensity, clips_intensity[0])
       bg_clip_intensity = clips_intensity[0]
       # get a random choice that is not the current choice
       chosen_clip = random.choice(bg_clips_by_intensity[bg_clip_intensity])
@@ -407,15 +417,14 @@ class ActiveStuff:
       self.clips[0] = (LAYER_BG, chosen_clip)
       resolume_commands.activate_clip(LAYER_BG, chosen_clip)
 
-
-      print("clips now:", self.clips[0])
+      print("sld_resolume_controller::clips now:", self.clips[0])
       pass
     elif self.section == 3:
       # turn off the variation
       if self.incremental_section_effect == 0:
-        self.fx.append( (LAYER_BG, "huerotate2") )
+        # self.fx.append( (LAYER_BG, "huerotate2") )
         resolume_commands.deactivate_effect(LAYER_BG, "huerotate2")
-        print("turned off huerotate2 cuz of section 3")
+        # print("turned off huerotate2 cuz of section 3")
     return
 
   # debug string about current state of ActiveStuff
@@ -434,12 +443,19 @@ class ActiveStuff:
     return effects_state
 
 
-  def deactivate(self):
+  def deactivate_active_fx(self):
     # deactivate fx
     for f in self.fx:
-      # TODO call resolume about this
-      print("deactivate fx {} on layer {}".format(f[1], f[0]))
+      print(
+          "sld_resolume_controller::deactivate fx {} on layer {}".format(f[1], f[0]))
       resolume_commands.deactivate_effect(f[0], f[1])
+    print("deactivating huerotate2")
+    resolume_commands.deactivate_effect(LAYER_BG, "huerotate2")
+    return
+  def deactivate_all_fx(self):
+    for f in effects:
+      resolume_commands.deactivate_effect(f[1], f[2])
+    resolume_commands.deactivate_effect(LAYER_BG, "huerotate2")
     return
 
 ast = ActiveStuff(IntensityTemplate(2, 0, (1, 0, 0)))
@@ -449,7 +465,7 @@ def load_pattern_and_play():
   # full_reset()
 
   i = int( op('intensity_chop').rows()[0][0].val )
-  print("load_pattern_and_play with intensity: ", i)
+  print("sld_resolume_controller::load_pattern_and_play with intensity: ", i)
 
   # pick a template
   ast.load( random.choice(intensity_templates[i]) )
@@ -458,9 +474,13 @@ def load_pattern_and_play():
   ast.activate()
   return
 
-def full_reset():
+def full_reset(deactivate_all = False):
   global ast
-  print("full_reset called. TODO skipping deactivate effects for now")
+  print("sld_resolume_controller::full_reset called. TODO skipping deactivate effects for now")
+  if deactivate_all:
+    ast.deactivate_all_fx()
+  else:
+    ast.deactivate_active_fx()
   # ast.deactivate()
 
   resolume_commands.clear()
@@ -498,13 +518,13 @@ def on_section_timer_complete():
   return
 
 def set_intensity(num):
-  print("intensity updated:", num)
   global intensity
   intensity = num
   return
 
 def choose_intensity(num):
   set_intensity(num)
+  op('/project1/ui_container/resolume_container/knobFixed').par.Value0 = num/19
   ast.load( random.choice( intensity_templates[num] ))
   ast.prepare()
   return
@@ -516,25 +536,10 @@ def activate():
 def set_transition_type(a, b):
   print("TODO transition type not implemented")
   return
-
-# old
-# def update_section(num):
-#   global section
-#   section = num
-#   op('section').par.Value0 = section
-#   return
-
 # handler for the button to increment section
 def increment_section():
-  print("increment section called.")
   ast.increment_section()
-
-  # old
-  # update_section((section + 1) % NUM_SECTIONS)
   return
-
-
-
 
 def choose_template():
   global active_template_fn
@@ -546,7 +551,7 @@ def choose_template():
 
 # TODO rethink what "next" does.
 def next():
-  print("not sure what NEXT does yet")
+  print("sld_resolume_controller::not sure what NEXT does yet")
   # increment_section()
   # if section == 0:
   #   choose_template()
@@ -555,23 +560,9 @@ def next():
   return
 
 def flush():
-  print("flush called. not sure what flush does yet")
+  print("sld_resolume_controller::flush called. not sure what flush does yet")
   # update_section(0)
   # if active_template_fn:
   #   active_template_fn()
 
   return
-
-
-
-
-
-
-
-
-
-
-
-
-
-print("sld_resolume_controller.py loaded.")

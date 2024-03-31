@@ -7,7 +7,7 @@
 
 def onValueChange(par, prev):
 	# use par.eval() to get current value
-	print(par.eval())
+	print("audio_toggle_exec::toggle updated:", par.eval())
 
 	if (par.eval() == True):
 		# turn off internal playlist audio
