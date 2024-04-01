@@ -75,7 +75,7 @@ def do_current_action():
 
 		elif current_action == "end":
 			print("TODO NEEDS TESTING: implement next track behavior")
-			mod("/project1/ui_container/playlist_countainer/playlist_container/playlist_music_exec").next_track()
+			mod("/project1/ui_container/playlist_container/playlist_container/playlist_music_exec").next_track()
 
 	return
 

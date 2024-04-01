@@ -15,6 +15,7 @@ NUM_SECTIONS = 4
 LAYER_BG = 1
 LAYER_MASK = 2
 LAYER_TOP = 3
+LAYER_POST_EFFECTS = 5
 
 # trasnsitions that are fun for the bg layer
 t = [1, 3, 8, 10, 12, 13, 15, 17, 18, 19, 21, 31, 39, 46, 48]
@@ -81,27 +82,27 @@ top_clips_by_intensity = [
 #   top_layer_effects
 # ]
 
-# list of tuples (intensity, layer, effect_name)
+# list of tuples (intensity, layer, effect_name, is_audio_reactive)
 effects = [
   (0, LAYER_BG, "slide"),
   (0, LAYER_BG, "slide2"),
-  (0, LAYER_BG, "slide3"), # audio-reactive
+  (0, LAYER_BG, "slide3", True),
   (0, LAYER_BG, "huerotate"),
   # placeholder: note that huerotate2 is special and is not in this list
   (0, LAYER_BG, "suckr"),
-  (0, LAYER_BG, "threshold"),  # audio-reactive
+  (0, LAYER_BG, "threshold", True),
 
-  (0, LAYER_BG, "vignette"),  # audio-reactive
-  (0, LAYER_BG, "blow"),  # audio-reactive
+  (0, LAYER_BG, "vignette", True),
+  (0, LAYER_BG, "blow", True),
   (0, LAYER_BG, "edgedetection"),
   (0, LAYER_BG, "ezradialcloner"),
   (0, LAYER_BG, "ezradialcloner2"),
   (0, LAYER_BG, "goo"),
   (0, LAYER_BG, "gridcloner"),
-  (0, LAYER_BG, "heat"),  # audio-reactive
-  (0, LAYER_BG, "heat2"),  # audio-reactive
+  (0, LAYER_BG, "heat", True),
+  (0, LAYER_BG, "heat2", True),
   (0, LAYER_BG, "infinitezoom"),
-  (0, LAYER_BG, "infinitezoom2"),  # audio-reactive
+  (0, LAYER_BG, "infinitezoom2", True),
   (0, LAYER_BG, "kaleidoscope"),
   (0, LAYER_BG, "kaleidoscope2"),
   (0, LAYER_BG, "kaleidoscope3"),
@@ -115,7 +116,7 @@ effects = [
   (0, LAYER_BG, "polarkaleido4"),
   (0, LAYER_BG, "polarkaleido5"),
 
-  (0, LAYER_MASK, "slide"),  # audio-reactive
+  (0, LAYER_MASK, "slide", True),
   (0, LAYER_MASK, "slide2"),
   (0, LAYER_MASK, "slide3"),
   (0, LAYER_MASK, "radialmask"),
@@ -123,13 +124,24 @@ effects = [
   (1, LAYER_MASK, "kaleidoscope2"),
   (2, LAYER_MASK, "kaleidoscope3"),
   (0, LAYER_MASK, "ezradialcloner"),
-  (0, LAYER_MASK, "displace"),  # audio-reactive
-  (1, LAYER_MASK, "displace2"), # audio-reactive
-  (2, LAYER_MASK, "displace3"),  # audio-reactive
-  (0, LAYER_MASK, "distortion"), # audio-reactive
-  (1, LAYER_MASK, "distortion2"),  # audio-reactive
-  (2, LAYER_MASK, "distortion3"),  # audio-reactive
+  (0, LAYER_MASK, "displace", True),
+  (1, LAYER_MASK, "displace2", True),
+  (2, LAYER_MASK, "displace3", True),
+  (0, LAYER_MASK, "distortion", True),
+  (1, LAYER_MASK, "distortion2", True),
+  (2, LAYER_MASK, "distortion3", True),
   (2, LAYER_MASK, "trails"),
+]
+
+dashboard_effects = [
+  (0, LAYER_POST_EFFECTS, "suckr"),
+  (0, LAYER_POST_EFFECTS, "threshold"),
+  (0, LAYER_POST_EFFECTS, "vignette"),
+  (0, LAYER_POST_EFFECTS, "blow"),
+  (0, LAYER_POST_EFFECTS, "edgedetection"),
+  (0, LAYER_POST_EFFECTS, "heat"),
+  (0, LAYER_POST_EFFECTS, "heat2"),
+  (0, LAYER_POST_EFFECTS, "infinitezoom"),
 ]
 
 # get the effects above where the intensity is 0
@@ -332,8 +344,6 @@ class ActiveStuff:
     if len(self.clips) < 1:
       print("ERROR: weird, clips was empty.", self.mb.active_layers, self.mb.clip_intensity, clips_intensity, clips)
 
-    # TODO intensity
-    # effect_intensities = get_array_with_total(self.mb.effect_count, self.mb.effect_intensity, 2)
     self.deactivate_all_fx()
     fx = []
     # for i in range(self.mb.effect_count):
@@ -345,8 +355,12 @@ class ActiveStuff:
     for i in range(3):
       for j in range(effect_count_by_intensity[i]):
         chosen_effect = random.choice(effects_by_intensity[i])
-        fx.append(chosen_effect)
-
+        if (len(chosen_effect) > 3 and chosen_effect[3] and self.use_dashboard_over_audio_reactive):
+          print("DEBUG: there was an audio reactive effect, but we're using the dashboard instead.")
+          dashboard_effect = random.choice(dashboard_effects)
+          fx.append(dashboard_effect)
+        else:
+          fx.append(chosen_effect)
 
     self.fx = fx
 
@@ -449,11 +463,13 @@ class ActiveStuff:
       print(
           "sld_resolume_controller::deactivate fx {} on layer {}".format(f[1], f[0]))
       resolume_commands.deactivate_effect(f[0], f[1])
-    print("deactivating huerotate2")
+    # print("deactivating huerotate2")
     resolume_commands.deactivate_effect(LAYER_BG, "huerotate2")
     return
   def deactivate_all_fx(self):
     for f in effects:
+      resolume_commands.deactivate_effect(f[1], f[2])
+    for f in dashboard_effects:
       resolume_commands.deactivate_effect(f[1], f[2])
     resolume_commands.deactivate_effect(LAYER_BG, "huerotate2")
     return
@@ -510,6 +526,10 @@ def on_bpm_change(bpm, restart_section = True):
 
     load_pattern_and_play()
 
+  return
+
+def set_is_playlist_audio(val):
+  ast.use_dashboard_over_audio_reactive = val
   return
 
 def on_section_timer_complete():
