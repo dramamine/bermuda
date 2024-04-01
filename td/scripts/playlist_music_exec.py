@@ -11,19 +11,16 @@
 # If rows or columns are deleted, sizeChange will be called instead of row/col/cellChange.
 import random
 
-is_ordered = False
 current_idx = 1
 def onTableChange(dat):
   global is_ordered, current_idx
   print("playlist_music_exec::table has changed.")
   if (str(dat[1,0]).startswith("01 ")):
     print("playlist_music_exec::ordered playlist")
-    is_ordered = True
     current_idx = 1
     pickFirstTrack()
   else:
     print("playlist_music_exec::random playlist")
-    is_ordered = False
     pickRandomTrack()
   return
 
@@ -74,7 +71,7 @@ def pickRandomTrack():
     return
 
   selected = int(
-    op('/project1/timecode_xp/playlist_container/music_dropdown_value')['menuIndex']) + 1
+    op('music_dropdown_value')['menuIndex']) + 1
   options = list(filter(lambda x: x != selected, range(1, rows)))
   chosen_idx = random.choice(options)
   chosen_value = op('playlist_folder_musics')[chosen_idx, 0]
@@ -84,7 +81,7 @@ def pickRandomTrack():
 
 def next_track():
   # TODO do I need to confirm toggles?
-  if is_ordered:
+  if (str(op('playlist_folder_musics')[1, 0]).startswith("01 ")):
     pickNextTrack()
   else:
     pickRandomTrack()

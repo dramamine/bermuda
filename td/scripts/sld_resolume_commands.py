@@ -113,6 +113,10 @@ def heartbeat():
   print("heartbeat called.")
   return
 
+def clear_layer(layer):
+  send('/composition/layers/{}/clear'.format(layer), 1)
+  send('/composition/layers/{}/clear'.format(layer), 0)
+  return
 
 def first_layer_only_instant_fadeout_others(first_clip_idx = 1):
   print("sld_resolume_commands::first_layer_only_instant_fadeout_others")

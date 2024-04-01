@@ -328,10 +328,11 @@ class ActiveStuff:
   def load(self, mb):
     self.mb = mb
 
-  def prepare(self):
+  def prepare(self, transition_time = 2):
 
     # set transition mode
     resolume_commands.update_transition_type(LAYER_BG, random.choice(t))
+    resolume_commands.update_transition_time(LAYER_BG, 2)
 
     clips_intensity = get_clips_intensity(self.mb.active_layers, self.mb.clip_intensity)
     clips = []
@@ -346,21 +347,28 @@ class ActiveStuff:
 
     self.deactivate_all_fx()
     fx = []
-    # for i in range(self.mb.effect_count):
-    #   layer = random.randint(0, self.mb.active_layers-1)
-    #   options = effects_by_layer[layer]
-    #   chosen_effect = random.choice(options)
-    #   fx.append( (layer+1, chosen_effect) )
     effect_count_by_intensity = self.mb.effect_count_by_intensity
+    has_reactive_effect = False
     for i in range(3):
       for j in range(effect_count_by_intensity[i]):
         chosen_effect = random.choice(effects_by_intensity[i])
-        if (len(chosen_effect) > 3 and chosen_effect[3] and self.use_dashboard_over_audio_reactive):
-          print("DEBUG: there was an audio reactive effect, but we're using the dashboard instead.")
-          dashboard_effect = random.choice(dashboard_effects)
-          fx.append(dashboard_effect)
+        if len(chosen_effect) > 3 and chosen_effect[3]:
+          has_reactive_effect = True
+          if self.use_dashboard_over_audio_reactive:
+            print("DEBUG: there was an audio reactive effect, but we're using the dashboard instead.")
+            dashboard_effect = random.choice(dashboard_effects)
+            fx.append(dashboard_effect)
+          else:
+            fx.append(chosen_effect)
         else:
           fx.append(chosen_effect)
+
+    # add dashboard effect if we didn't get one already.
+    # TODO consider adding something like this for audio-reactive effects
+    if not has_reactive_effect and int(op('intensity_chop').rows()[0][0].val) >= 6:
+      if self.use_dashboard_over_audio_reactive:
+        dashboard_effect = random.choice(dashboard_effects)
+        fx.append(dashboard_effect)
 
     self.fx = fx
 
@@ -374,6 +382,13 @@ class ActiveStuff:
         print(
             "sld_resolume_controller::activate layer {} clip {}".format(c[0], c[1]))
         resolume_commands.activate_clip(c[0], c[1])
+
+      # clearing out old clips
+      if (self.mb.active_layers < 3):
+        resolume_commands.clear_layer(3)
+      if (self.mb.active_layers < 2):
+        resolume_commands.clear_layer(2)
+
       # activate fx
       for f in self.fx:
         # TODO call resolume about this
@@ -476,7 +491,7 @@ class ActiveStuff:
 
 ast = ActiveStuff(IntensityTemplate(2, 0, (1, 0, 0)))
 
-def load_pattern_and_play():
+def load_pattern_and_play(transition_time = 2):
   # TODO better reset?
   # full_reset()
 
@@ -486,7 +501,7 @@ def load_pattern_and_play():
   # pick a template
   ast.load( random.choice(intensity_templates[i]) )
 
-  ast.prepare()
+  ast.prepare(transition_time)
   ast.activate()
   return
 
@@ -515,6 +530,13 @@ def full_reset(deactivate_all = False):
   op('section_timer').par.initialize.pulse()
 
   return
+
+
+def fadeout(transition_time):
+  resolume_commands.update_transition_time(LAYER_BG, transition_time)
+  resolume_commands.update_transition_time(LAYER_MASK, transition_time)
+  resolume_commands.update_transition_time(LAYER_TOP, transition_time)
+  resolume_commands.clear()
 
 def on_bpm_change(bpm, restart_section = True):
   print("resolume_controller::update_bpm called")

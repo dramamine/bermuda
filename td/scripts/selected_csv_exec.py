@@ -51,6 +51,11 @@ def reset_timecode():
 	op('timer1').par.initialize.pulse()
 	return
 
+def safe_cast(val, to_type, default=None):
+    try:
+        return to_type(val)
+    except (ValueError, TypeError):
+        return default
 
 def do_current_action():
 	global current_event_ts
@@ -63,16 +68,29 @@ def do_current_action():
 		current_action = op('text1')[i, 1]
 		value1 = op('text1')[i, 2]
 		value2 = op('text1')[i, 3]
+		value3 = op('text1')[i, 4]
 		if current_action == "set_intensity":
 			mod("/project1/ui_container/resolume_container/sld_resolume_controller").choose_intensity(int(value1))
 			mod("/project1/ui_container/resolume_container/sld_resolume_controller").load_pattern_and_play()
-		elif current_action == "set_transition_type":
+		elif current_action == "update_transition_type":
 			# @TODO make sure this doesn't conflict with set_intensity, otherwise might need to sandwich it between choose_intensity & activate
 			mod("/project1/ui_container/resolume_container/sld_resolume_controller").set_transition_type("TODO", "TODO")
 		elif current_action == "set_bpm":
 			op("/project1/ui_container/resolume_container/bpm").par.Value0 = int(value1)
 			mod("/project1/ui_container/resolume_container/sld_resolume_controller").on_bpm_change(int(value1))
-
+		elif current_action == "update_section":
+			intensity = safe_cast(value1, int, None)
+			transition_style = safe_cast(value2, str, '')
+			transition_time = safe_cast(value3, int, 2)
+			if (transition_style == "fadeout"):
+				mod("/project1/ui_container/resolume_container/sld_resolume_controller").fadeout(transition_time)
+			elif (transition_style == "fadein"):
+					mod("/project1/ui_container/resolume_container/sld_resolume_controller").fadeout(0)
+					mod("/project1/ui_container/resolume_container/sld_resolume_controller").choose_intensity(intensity)
+					mod("/project1/ui_container/resolume_container/sld_resolume_controller").load_pattern_and_play(transition_time)
+			else:
+				mod("/project1/ui_container/resolume_container/sld_resolume_controller").choose_intensity(intensity)
+				mod("/project1/ui_container/resolume_container/sld_resolume_controller").load_pattern_and_play()
 		elif current_action == "end":
 			print("TODO NEEDS TESTING: implement next track behavior")
 			mod("/project1/ui_container/playlist_container/playlist_container/playlist_music_exec").next_track()
