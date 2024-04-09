@@ -50,18 +50,30 @@ def pickFirstTrack():
   return
 
 def pickNextTrack():
-  global current_idx
+  # read current value
+  current_track = int(str(
+      op('/project1/ui_container/playlist_container/playlist_container/selected_music')[1, 0])[:2])
 
   rows = op('playlist_folder_musics').numRows
-  if rows <= 1:
+  if rows <= current_track:
+    # @TODO better test the last tracks
+    print("pickNextTrack: rows <= current_track so im setting current_track to 1.")
+    current_track = 1
     return
 
-  current_idx += 1
-  if current_idx >= rows:
-    current_idx = 1
+  op('music_dropdown').par.Value0 = current_track
 
-  chosen_value = op('playlist_folder_musics')[current_idx, 0]
-  op('music_dropdown').par.Value0 = chosen_value
+  # global current_idx
+  # print("playlist_music_exec::pickRandomTrack, current index:", current_idx)
+
+
+  # current_idx += 1
+  # if current_idx >= rows:
+  #   current_idx = 1
+
+  # chosen_value = op('playlist_folder_musics')[current_idx, 0]
+  # op('music_dropdown').par.Value0 = chosen_value
+  # print("playlist_music_exec::pickRandomTrack dropdown value is now:", chosen_value)
   return
 
 def pickRandomTrack():
@@ -80,8 +92,9 @@ def pickRandomTrack():
   return
 
 def next_track():
+  print("next_track called...")
   # TODO do I need to confirm toggles?
-  if (str(op('playlist_folder_musics')[1, 0]).startswith("01 ")):
+  if (str(op('playlist_folder_musics')[1, 0])).startswith("01 "):
     pickNextTrack()
   else:
     pickRandomTrack()

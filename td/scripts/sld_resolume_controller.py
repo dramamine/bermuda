@@ -21,7 +21,7 @@ LAYER_POST_EFFECTS = 5
 t = [1, 3, 8, 10, 12, 13, 15, 17, 18, 19, 21, 31, 39, 46, 48]
 
 # these numbers match up with empty clips in the resolume composition
-v = [0, 17, 26, 29]
+v = [0, 24, 38, 44]
 bg_clips_by_intensity = [
   range(v[0]+1, v[1]),
   range(v[0]+1, v[2]),
@@ -161,80 +161,121 @@ IntensityTemplate = namedtuple('IntensityTemplate', [
 # TODO need more intesnisities with just the first layer. maybe 0-4?
 # TODO intensity_templates still unused
 intensity_templates = [
+  # 0-4
   [IntensityTemplate(1, 0, (0, 0, 0))],
-  [IntensityTemplate(2, 0, (0, 0, 0))],
-  [IntensityTemplate(2, 1, (0, 0, 0))],
-  [IntensityTemplate(2, 1, (1, 0, 0))],
+  [IntensityTemplate(1, 0, (0, 0, 0))],
+  [IntensityTemplate(1, 0, (1, 0, 0))],
+  [IntensityTemplate(1, 1, (2, 0, 0))],
+  [IntensityTemplate(2, 0, (1, 0, 0))],
 
+  # 5
   [
-    IntensityTemplate(2, 1, (0, 1, 0)),
-    IntensityTemplate(2, 1, (2, 0, 0)),
-    IntensityTemplate(2, 2, (1, 0, 0)),
+    IntensityTemplate(1, 1, (1, 1, 0)),
+    IntensityTemplate(1, 1, (2, 0, 0)),
+    IntensityTemplate(2, 0, (2, 0, 0)),
+    IntensityTemplate(2, 1, (1, 0, 0)),
   ],
 
+  # 6
+  [
+    IntensityTemplate(1, 2, (1, 1, 0)),
+    IntensityTemplate(1, 2, (2, 0, 0)),
+    IntensityTemplate(2, 1, (1, 1, 0)),
+    IntensityTemplate(2, 1, (2, 0, 0)),
+  ],
+
+  # 7
   [
     IntensityTemplate(2, 1, (1, 1, 0)),
-    IntensityTemplate(2, 2, (0, 1, 0)),
+    IntensityTemplate(2, 1, (2, 0, 0)),
+    IntensityTemplate(2, 2, (1, 1, 0)),
     IntensityTemplate(2, 2, (2, 0, 0)),
   ],
 
+  # 8
   [
-    IntensityTemplate(2, 2, (1, 1, 0)),
+    IntensityTemplate(2, 2, (2, 1, 0)),
+    IntensityTemplate(2, 2, (3, 0, 0)),
+    IntensityTemplate(2, 3, (1, 1, 0)),
+    IntensityTemplate(2, 3, (2, 0, 0)),
   ],
 
+  # 9
   [
-    IntensityTemplate(2, 2, (0, 2, 0)),
-    IntensityTemplate(2, 2, (0, 0, 1)),
+    IntensityTemplate(3, 2, (1, 1, 0)),
+    IntensityTemplate(3, 2, (2, 0, 0)),
+    IntensityTemplate(3, 3, (1, 0, 0)),
+    IntensityTemplate(3, 3, (1, 0, 0)),
   ],
 
+  # 10
   [
-    IntensityTemplate(3, 0, (1, 0, 0)),
+    IntensityTemplate(2, 4, (1, 0, 0)),
+    IntensityTemplate(3, 3, (1, 0, 0)),
   ],
 
+  # 11
   [
-    IntensityTemplate(3, 1, (1, 0, 0)),
-    IntensityTemplate(3, 0, (0, 1, 0)),
+    IntensityTemplate(2, 4, (1, 1, 0)),
+    IntensityTemplate(2, 4, (2, 0, 0)),
+    IntensityTemplate(3, 3, (1, 1, 0)),
+    IntensityTemplate(3, 3, (2, 0, 0)),
   ],
 
+  # 12
   [
-    IntensityTemplate(3, 1, (2, 0, 0)),
-    IntensityTemplate(3, 1, (2, 1, 0)),
+    IntensityTemplate(2, 4, (1, 1, 1)),
+    IntensityTemplate(2, 4, (2, 1, 0)),
+    IntensityTemplate(2, 4, (3, 0, 0)),
+    IntensityTemplate(3, 3, (1, 1, 1)),
+    IntensityTemplate(3, 3, (2, 1, 0)),
+    IntensityTemplate(3, 3, (3, 0, 0)),
   ],
 
+  # 13
   [
-    IntensityTemplate(3, 2, (1, 1, 0))
+    IntensityTemplate(2, 4, (2, 1, 1)),
+    IntensityTemplate(2, 4, (3, 1, 0)),
+    IntensityTemplate(3, 3, (2, 1, 1)),
+    IntensityTemplate(3, 3, (3, 1, 0)),
   ],
 
+  # 14
   [
-    IntensityTemplate(3, 3, (1, 1, 0))
+    IntensityTemplate(2, 4, (2, 2, 1)),
+    IntensityTemplate(2, 4, (3, 2, 0)),
+    IntensityTemplate(3, 3, (2, 2, 1)),
+    IntensityTemplate(3, 3, (3, 2, 0)),
   ],
 
+  # 15
   [
-    IntensityTemplate(3, 3, (2, 1, 0))
+    IntensityTemplate(3, 3,  (3, 1, 1)),
+    IntensityTemplate(3, 3,  (3, 2, 1))
   ],
 
-  [
-    IntensityTemplate(3, 3,  (3, 1, 0))
-  ],
-
+  # 16
   [
       IntensityTemplate(3, 3,  (4, 1, 0)),
       IntensityTemplate(3, 3,  (4, 0, 1)),
       IntensityTemplate(3, 3,  (3, 1, 1)),
   ],
 
+  # 17
   [
       IntensityTemplate(3, 4,  (3, 1, 0)),
       IntensityTemplate(3, 4,  (3, 0, 1)),
       IntensityTemplate(3, 4,  (2, 1, 1)),
   ],
 
+  # 18
   [
       IntensityTemplate(3, 4,  (4, 1, 0)),
       IntensityTemplate(3, 4,  (4, 0, 1)),
       IntensityTemplate(3, 4,  (3, 1, 1)),
   ],
 
+  # 19
   [
       IntensityTemplate(3, 4,  (5, 1, 0)),
       IntensityTemplate(3, 4,  (5, 0, 1)),
@@ -243,14 +284,6 @@ intensity_templates = [
       IntensityTemplate(3, 4,  (4, 1, 1)),
       IntensityTemplate(3, 4,  (3, 2, 1)),
   ],
-
-  [
-      IntensityTemplate(3, 5,  (3, 1, 0)),
-      IntensityTemplate(3, 5,  (3, 0, 1)),
-      IntensityTemplate(3, 5,  (2, 1, 1)),
-  ],
-
-
 ]
 
 
@@ -294,9 +327,9 @@ def get_clips_intensity(active_layers, clip_intensity):
   if active_layers == 1:
     return [clip_intensity]
   if active_layers == 2:
-    return divide_into_twos(clip_intensity)
+    return [clip_intensity, clip_intensity]# divide_into_twos(clip_intensity)
   if active_layers == 3:
-    return divide_into_threes(clip_intensity)
+    return [clip_intensity, clip_intensity, clip_intensity] # divide_into_threes(clip_intensity)
 
 # text representation of what's going on currently with ActiveStuff.
 # TODO maybe just call an op() and update its value
@@ -331,8 +364,10 @@ class ActiveStuff:
   def prepare(self, transition_time = 2):
 
     # set transition mode
-    resolume_commands.update_transition_type(LAYER_BG, random.choice(t))
-    resolume_commands.update_transition_time(LAYER_BG, 2)
+    type = random.choice(t)
+    for i in range(1,4):
+      resolume_commands.update_transition_type(i, type)
+      resolume_commands.update_transition_time(i, 2)
 
     clips_intensity = get_clips_intensity(self.mb.active_layers, self.mb.clip_intensity)
     clips = []
@@ -365,7 +400,7 @@ class ActiveStuff:
 
     # add dashboard effect if we didn't get one already.
     # TODO consider adding something like this for audio-reactive effects
-    if not has_reactive_effect and int(op('intensity_chop').rows()[0][0].val) >= 6:
+    if not has_reactive_effect and int(op('intensity_chop').rows()[0][0].val) >= 5:
       if self.use_dashboard_over_audio_reactive:
         dashboard_effect = random.choice(dashboard_effects)
         fx.append(dashboard_effect)
@@ -409,8 +444,9 @@ class ActiveStuff:
       op('section_timer').par.start.pulse()
 
   def increment_section(self):
+    print("sld_resolume_controller::increment_section called, it was:", self.section, self.section % NUM_SECTIONS)
     self.section = (self.section + 1) % NUM_SECTIONS
-    # print("sld_resolume_controller::increment_section called, its now:", self.section)
+    print("sld_resolume_controller::increment_section called, its now:", self.section)
     op('section').par.Value0 = self.section
 
     # switch statement based on section
@@ -419,12 +455,11 @@ class ActiveStuff:
       self.activate()
     elif self.section == 1:
       # add a variation
-      if self.incremental_section_effect == 0:
-        self.fx.append( (LAYER_BG, "huerotate2") )
-        resolume_commands.activate_effect(LAYER_BG, "huerotate2")
-        resolume_commands.send(
-            "/composition/layers/1/video/effects/huerotate2/effect/huerotate", 0.0
-          )
+      self.fx.append( (LAYER_BG, "huerotate2") )
+      resolume_commands.activate_effect(LAYER_BG, "huerotate2")
+      resolume_commands.send(
+          "/composition/layers/1/video/effects/huerotate2/effect/huerotate", 0.0
+        )
         # FUN INFO: in Resolume, set the effect Start Settings -> Clip Trigger OFF to prevent re-animation when switching clips
         # print("sld_resolume_controller::added huerotate2 to top layer since we incremented section")
     elif self.section == 2:
@@ -450,10 +485,11 @@ class ActiveStuff:
       pass
     elif self.section == 3:
       # turn off the variation
-      if self.incremental_section_effect == 0:
-        # self.fx.append( (LAYER_BG, "huerotate2") )
-        resolume_commands.deactivate_effect(LAYER_BG, "huerotate2")
-        # print("turned off huerotate2 cuz of section 3")
+        self.fx.append((LAYER_BG, "huerotate3"))
+        resolume_commands.activate_effect(LAYER_BG, "huerotate3")
+        resolume_commands.send(
+            "/composition/layers/1/video/effects/huerotate3/effect/huerotate", 0.0
+        )
     return
 
   # debug string about current state of ActiveStuff
@@ -479,14 +515,16 @@ class ActiveStuff:
           "sld_resolume_controller::deactivate fx {} on layer {}".format(f[1], f[0]))
       resolume_commands.deactivate_effect(f[0], f[1])
     # print("deactivating huerotate2")
-    resolume_commands.deactivate_effect(LAYER_BG, "huerotate2")
+    # resolume_commands.deactivate_effect(LAYER_BG, "huerotate2")
     return
   def deactivate_all_fx(self):
+    print("sld_resolume_controller::deactivate_all_fx called")
     for f in effects:
       resolume_commands.deactivate_effect(f[1], f[2])
     for f in dashboard_effects:
       resolume_commands.deactivate_effect(f[1], f[2])
     resolume_commands.deactivate_effect(LAYER_BG, "huerotate2")
+    resolume_commands.deactivate_effect(LAYER_BG, "huerotate3")
     return
 
 ast = ActiveStuff(IntensityTemplate(2, 0, (1, 0, 0)))

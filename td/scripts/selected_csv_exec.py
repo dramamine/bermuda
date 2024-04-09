@@ -82,15 +82,26 @@ def do_current_action():
 			intensity = safe_cast(value1, int, None)
 			transition_style = safe_cast(value2, str, '')
 			transition_time = safe_cast(value3, int, 2)
+
 			if (transition_style == "fadeout"):
 				mod("/project1/ui_container/resolume_container/sld_resolume_controller").fadeout(transition_time)
 			elif (transition_style == "fadein"):
-					mod("/project1/ui_container/resolume_container/sld_resolume_controller").fadeout(0)
-					mod("/project1/ui_container/resolume_container/sld_resolume_controller").choose_intensity(intensity)
-					mod("/project1/ui_container/resolume_container/sld_resolume_controller").load_pattern_and_play(transition_time)
+				mod("/project1/ui_container/resolume_container/sld_resolume_commands").update_transition_time(1, 0)
+				mod("/project1/ui_container/resolume_container/sld_resolume_commands").update_transition_time(2, 0)
+				mod("/project1/ui_container/resolume_container/sld_resolume_commands").update_transition_time(3, 0)
+				mod("/project1/ui_container/resolume_container/sld_resolume_commands").clear()
+				mod("/project1/ui_container/resolume_container/sld_resolume_controller").choose_intensity(intensity)
+				mod("/project1/ui_container/resolume_container/sld_resolume_controller").load_pattern_and_play(transition_time)
+			elif (transition_style == "sudden"):
+				mod("/project1/ui_container/resolume_container/sld_resolume_commands").update_transition_time(1, 0)
+				mod("/project1/ui_container/resolume_container/sld_resolume_commands").update_transition_time(2, 0)
+				mod("/project1/ui_container/resolume_container/sld_resolume_commands").update_transition_time(3, 0)
+				mod("/project1/ui_container/resolume_container/sld_resolume_controller").choose_intensity(intensity)
+				mod("/project1/ui_container/resolume_container/sld_resolume_controller").load_pattern_and_play()
 			else:
 				mod("/project1/ui_container/resolume_container/sld_resolume_controller").choose_intensity(intensity)
 				mod("/project1/ui_container/resolume_container/sld_resolume_controller").load_pattern_and_play()
+
 		elif current_action == "end":
 			print("TODO NEEDS TESTING: implement next track behavior")
 			mod("/project1/ui_container/playlist_container/playlist_container/playlist_music_exec").next_track()
