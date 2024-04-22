@@ -60,7 +60,7 @@ def do_autopilot(yes):
 
 # update transition time for bg layer. value given in seconds
 def update_transition_time(layer, val):
-  print("sld_resolume_commands::updating duration:", layer, val)
+  # print("sld_resolume_commands::updating duration:", layer, val)
   send("/composition/layers/{}/transition/duration".format(layer), val/10)
   return
 

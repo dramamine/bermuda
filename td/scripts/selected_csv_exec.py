@@ -20,6 +20,14 @@ def onRowChange(dat, rows):
 		return
 
 	mp3_path = str(dat[1, 1])
+	# remove "E:/git/lightdream-scripts/td/" from path
+	mp3_path = re.sub(
+		"E:/git/lightdream-scripts/td/",
+		"",
+		mp3_path
+	)
+	print("mp3_path:", mp3_path)
+
 	# mp3_path = path.replace("csv", "mp3")
 	op('audiofilein1').par.file = mp3_path
 
@@ -33,6 +41,8 @@ def onRowChange(dat, rows):
 			mp3_path
 		)
 	)
+
+
 	play_song()
 	op('text1').par.file = csv_path
 

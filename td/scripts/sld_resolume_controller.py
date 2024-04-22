@@ -444,9 +444,9 @@ class ActiveStuff:
       op('section_timer').par.start.pulse()
 
   def increment_section(self):
-    print("sld_resolume_controller::increment_section called, it was:", self.section, self.section % NUM_SECTIONS)
+    # print("sld_resolume_controller::increment_section called, it was:", self.section, self.section % NUM_SECTIONS)
     self.section = (self.section + 1) % NUM_SECTIONS
-    print("sld_resolume_controller::increment_section called, its now:", self.section)
+    # print("sld_resolume_controller::increment_section called, its now:", self.section)
     op('section').par.Value0 = self.section
 
     # switch statement based on section
@@ -465,7 +465,10 @@ class ActiveStuff:
     elif self.section == 2:
       # update bg clip
       if len(self.clips) < 1:
-        print("ERROR: found the issue. self.clips is empty")
+        print("sld_resolume_controller::increment_section ERROR: clips was empty, resetting. ")
+        self.prepare()
+        self.activate()
+        return
       else:
         print("sld_resolume_controller::clips was:", self.clips[0])
 

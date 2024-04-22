@@ -3,30 +3,22 @@
 - AutoHotKey - not really necessary if you chose to compile it as .exe on host machine
   + Win+7 through Win+9 opens all the softwares individually
 - AHK script needs to be added to Windows Start scripts as appropriate
-- Resolume 7.3.3
+- Resolume 7.18.2
 
-- USC: zip up on host, unzip on target, check AHK destinations
-  - should be in git\lightdream-scripts\usc
-  - https://github.com/dramamine/unnamed-sdvx-clone/tree/lightdream-0.4
+## Setup Steps for Laptop
+
+- Confirm Resolume versions are matching.
+- Confirm TouchDesigner versions are matching.
+- JuiceBar needs to be installed. Make sure any purchased plugins are also installed.
+- @TODO playlists need to be relative
 
 
-## TOUCHSCREEN
-- in Control Panel, go to Tablet PC Settings to configure display options
-- in Control Panel, Pen and Tablet settings also look helpful
-- Update Main.cfg fullscreen settings ex.
-```
-ScreenWidth = 1920
-ScreenHeight = 1080
-Fullscreen = True
-FullscreenMonitorIndex = 1
-ShowFPS = False
-```
 
 ## UPDATING FILES
 ### 1. COLLECTION
 a. Resolume
   - To collect files: (load up lightdream-scripts/resolume subfolders and git commit them)
-    - Extra Effects dlls: need to check Video Preferences for locations: 
+    - Extra Effects dlls: need to check Video Preferences for locations:
       - e:\shaders\plugins
       - e:\git\resolume-ffgl\binaries\x64
     - Advanced mapping
