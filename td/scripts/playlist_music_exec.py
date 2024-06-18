@@ -14,7 +14,7 @@ import random
 current_idx = 1
 def onTableChange(dat):
   global is_ordered, current_idx
-  print("playlist_music_exec::table has changed.")
+  # print("playlist_music_exec::table has changed.")
   if (str(dat[1,0]).startswith("01 ")):
     print("playlist_music_exec::ordered playlist")
     current_idx = 1
@@ -77,7 +77,7 @@ def pickNextTrack():
   return
 
 def pickRandomTrack():
-  print("playlist_music_exec::pickRandomTrack")
+  # print("playlist_music_exec::pickRandomTrack")
   rows = op('playlist_folder_musics').numRows
   if rows <= 1:
     return
@@ -92,10 +92,14 @@ def pickRandomTrack():
   return
 
 def next_track():
-  print("next_track called...")
+  # first, clear out any timer stuff
+  op('/project1/ui_container/playlist_container/playlist_manager/timer1').par.initialize.pulse()
+  op("/project1/ui_container/resolume_container/section_timer").par.initialize.pulse()
+  # print("next_track called...")
   # TODO do I need to confirm toggles?
   if (str(op('playlist_folder_musics')[1, 0])).startswith("01 "):
     pickNextTrack()
   else:
+    print("picking random track...")
     pickRandomTrack()
   return

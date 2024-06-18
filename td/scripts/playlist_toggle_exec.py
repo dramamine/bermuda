@@ -12,13 +12,17 @@ def onValueChange(par, prev):
 	if par.eval():
 		print("playlist_toggle_exec::toggled on")
 		# turn off external audio
-		op('/project1/ui_container/audio_container/toggle').par.Value0 = False
-		op('audiofilein1').par.play = True
+		op("external_audio_toggle").par.Value0 = False
+
+		# op('/project1/ui_container/playlist_container/audio_analysis_and_player').par.Value0 = False
+		op('/project1/ui_container/playlist_container/audio_analysis_and_player/switch2').par.index = 0
+		op('/project1/ui_container/playlist_container/audio_analysis_and_player/audiofilein1').par.play = True
 		mod("/project1/ui_container/resolume_container/sld_resolume_controller").set_is_playlist_audio(True)
 		scripts.play_song()
 	else:
 		print("playlist_toggle_exec::toggled off")
-		op('audiofilein1').par.play = False
+		op('/project1/ui_container/playlist_container/audio_analysis_and_player/audiofilein1').par.play = False
+		op('/project1/ui_container/playlist_container/audio_analysis_and_player/switch2').par.index = 1
 		mod("/project1/ui_container/resolume_container/sld_resolume_controller").set_is_playlist_audio(False)
 		scripts.reset_timecode()
 	return

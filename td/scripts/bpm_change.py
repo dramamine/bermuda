@@ -25,6 +25,6 @@ def whileOff(channel, sampleIndex, val, prev):
 
 
 def onValueChange(channel, sampleIndex, val, prev):
-	print("bpm_change::onValueChange called. val:", val, "prev:", prev)
+	# print("bpm_change::onValueChange called. val:", val, "prev:", prev)
 	sld_resolume_controller.on_bpm_change(val)
 	return

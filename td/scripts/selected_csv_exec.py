@@ -13,7 +13,7 @@ import re
 current_event_ts = '0.000'
 
 def onRowChange(dat, rows):
-	print("selected_csv_exec::row has changed.", rows)
+	# print("selected_csv_exec::row has changed.", rows)
 
 	is_toggle_on = op('toggle').par.Value0.eval()
 	if not is_toggle_on:
@@ -26,10 +26,10 @@ def onRowChange(dat, rows):
 		"",
 		mp3_path
 	)
-	print("mp3_path:", mp3_path)
+	# print("mp3_path:", mp3_path)
 
 	# mp3_path = path.replace("csv", "mp3")
-	op('audiofilein1').par.file = mp3_path
+	op('/project1/ui_container/playlist_container/audio_analysis_and_player/audiofilein1').par.file = mp3_path
 
 
 	csv_path = re.sub(
@@ -50,14 +50,14 @@ def onRowChange(dat, rows):
 
 
 def play_song():
-	op('timecode1').par.init.pulse()
-	op('timecode1').par.start.pulse()
+	op('../audio_analysis_and_player/timecode1').par.init.pulse()
+	op('../audio_analysis_and_player/timecode1').par.start.pulse()
 	load_next_timer(use_zero=True)
 	pass
 
 
 def reset_timecode():
-	op('timecode1').par.init.pulse()
+	op('../audio_analysis_and_player/timecode1').par.init.pulse()
 	op('timer1').par.initialize.pulse()
 	return
 
@@ -79,15 +79,15 @@ def do_current_action():
 		value1 = op('text1')[i, 2]
 		value2 = op('text1')[i, 3]
 		value3 = op('text1')[i, 4]
+
+		print("selected_csv_exec:current action:", current_action, value1, value2, value3)
+
 		if current_action == "set_intensity":
 			mod("/project1/ui_container/resolume_container/sld_resolume_controller").choose_intensity(int(value1))
 			mod("/project1/ui_container/resolume_container/sld_resolume_controller").load_pattern_and_play()
-		elif current_action == "update_transition_type":
-			# @TODO make sure this doesn't conflict with set_intensity, otherwise might need to sandwich it between choose_intensity & activate
-			mod("/project1/ui_container/resolume_container/sld_resolume_controller").set_transition_type("TODO", "TODO")
 		elif current_action == "set_bpm":
 			op("/project1/ui_container/resolume_container/bpm").par.Value0 = int(value1)
-			mod("/project1/ui_container/resolume_container/sld_resolume_controller").on_bpm_change(int(value1))
+			mod("/project1/ui_container/resolume_container/sld_resolume_controller").on_bpm_change(int(value1), False)
 		elif current_action == "update_section":
 			intensity = safe_cast(value1, int, None)
 			transition_style = safe_cast(value2, str, '')
@@ -113,8 +113,8 @@ def do_current_action():
 				mod("/project1/ui_container/resolume_container/sld_resolume_controller").load_pattern_and_play()
 
 		elif current_action == "end":
-			print("TODO NEEDS TESTING: implement next track behavior")
-			mod("/project1/ui_container/playlist_container/playlist_container/playlist_music_exec").next_track()
+			# print("TODO NEEDS TESTING: implement next track behavior")
+			mod("/project1/ui_container/playlist_container/playlist_manager/playlist_container/playlist_music_exec").next_track()
 
 	return
 
@@ -122,13 +122,13 @@ def do_current_action():
 def load_next_timer(use_zero=False):
 	global current_event_ts
 	# read timestamp
-	ts = 0 if use_zero else op('timecode1')['total_seconds']
+	ts = 0 if use_zero else op('../audio_analysis_and_player/timecode1')['total_seconds']
 	# print("selected_csv_exec:ts:", ts)
 
 	# get next upcoming event
 	for i in range(1, op('text1').numRows):
 		event_ts = float(op('text1')[i, 0])
-		if event_ts > ts + 0.005:
+		if event_ts > (ts + 0.005):
 			# print("selected_csv_exec:next event:", event_ts)
 			current_event_ts = op('text1')[i, 0]
 

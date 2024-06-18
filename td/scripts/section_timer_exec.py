@@ -28,7 +28,7 @@ def whileOff(channel, sampleIndex, val, prev):
 	return
 
 def onValueChange(channel, sampleIndex, val, prev):
-	print("section_timer_exec::onValueChange called. val:", val, "prev:", prev)
+	# print("section_timer_exec::onValueChange called. val:", val, "prev:", prev)
 	if val >= 1:
 		sld_resolume_controller.on_section_timer_complete()
 		op('section_timer').par.initialize.pulse()
