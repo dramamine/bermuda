@@ -1,7 +1,7 @@
 ; open all the programs
 GoSub #7
 GoSub #8
-; GoSub #9
+GoSub #9
 
 ; load resolume, turn on Advanced Output
 #7::
@@ -43,25 +43,23 @@ Sleep 1000
 ; Send, {F1}
 Return
 
-
-
-
-
-; load USC
-; #9::
-; Run C:\git\lightdream-scripts\usc\usc-game.exe -notitle
-; WinWait USC-Game, , 60
-; if ErrorLevel
-; {
-;     MsgBox, Timed out waiting for USC to open.
-;     return
-; }
-; WinActivate, USC-Game
-; WinWaitActive, USC-Game
-; Return
-
-; ; run python script
-; #0::
-; dir    := "C:\git\lightdream-artnet"
-; script  = %dir%\main.py
-; F3::Run, %ComSpec% /k python "%script%"
+; load Beat Link Trigger
+#9::
+Run, %A_ProgramFiles%\Deep Symmetry\Beat Link Trigger\Beat Link Trigger.exe
+WinWait Beat Link Triggers, , 15
+WinWaitActive, Beat Link Triggers
+if ErrorLevel
+{
+    MsgBox, Timed out waiting for Beat Link Trigger to open.
+    return
+}
+SetTitleMatchMode 2
+WinWait Beat Link Show, , 15
+if ErrorLevel
+{
+    MsgBox, "The show doesn't seem to be open. In the following dialog, please navigate to C:/artsync/lightdream-scripts/bermuda-show.bls and open it."
+    WinWaitActive, Beat Link Triggers
+    Send, ^o
+    return
+}
+Return

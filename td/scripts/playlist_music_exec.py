@@ -52,7 +52,7 @@ def pickFirstTrack():
 def pickNextTrack():
   # read current value
   current_track = int(str(
-      op('/project1/ui_container/playlist_container/playlist_container/selected_music')[1, 0])[:2])
+      op('/project1/ui_container/playlist_manager/playlist_container/selected_music')[1, 0])[:2])
 
   rows = op('playlist_folder_musics').numRows
   if rows <= current_track:
@@ -92,6 +92,7 @@ def pickRandomTrack():
   return
 
 def next_track():
+  # print("next_track called...")
   # first, clear out any timer stuff
   op('/project1/ui_container/playlist_container/playlist_manager/timer1').par.initialize.pulse()
   op("/project1/ui_container/resolume_container/section_timer").par.initialize.pulse()

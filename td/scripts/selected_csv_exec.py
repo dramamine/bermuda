@@ -15,7 +15,7 @@ current_event_ts = '0.000'
 def onRowChange(dat, rows):
 	# print("selected_csv_exec::row has changed.", rows)
 
-	is_toggle_on = op('toggle').par.Value0.eval()
+	is_toggle_on = op('playlist_toggle').par.Value0.eval()
 	if not is_toggle_on:
 		return
 
@@ -26,11 +26,8 @@ def onRowChange(dat, rows):
 		"",
 		mp3_path
 	)
-	# print("mp3_path:", mp3_path)
 
-	# mp3_path = path.replace("csv", "mp3")
 	op('/project1/ui_container/playlist_container/audio_analysis_and_player/audiofilein1').par.file = mp3_path
-
 
 	csv_path = re.sub(
 		r'/\d{2}\s',
@@ -48,16 +45,20 @@ def onRowChange(dat, rows):
 
 	return
 
+def load_current_song():
+	onRowChange(op('selected_music'), None)
+	return
+
 
 def play_song():
-	op('../audio_analysis_and_player/timecode1').par.init.pulse()
-	op('../audio_analysis_and_player/timecode1').par.start.pulse()
+	op('/project1/ui_container/playlist_container/audio_analysis_and_player/timecode1').par.init.pulse()
+	op('/project1/ui_container/playlist_container/audio_analysis_and_player/timecode1').par.start.pulse()
 	load_next_timer(use_zero=True)
 	pass
 
 
 def reset_timecode():
-	op('../audio_analysis_and_player/timecode1').par.init.pulse()
+	op('/project1/ui_container/playlist_container/audio_analysis_and_player/timecode1').par.init.pulse()
 	op('timer1').par.initialize.pulse()
 	return
 
@@ -113,8 +114,7 @@ def do_current_action():
 				mod("/project1/ui_container/resolume_container/sld_resolume_controller").load_pattern_and_play()
 
 		elif current_action == "end":
-			# print("TODO NEEDS TESTING: implement next track behavior")
-			mod("/project1/ui_container/playlist_container/playlist_manager/playlist_container/playlist_music_exec").next_track()
+			mod("/project1/ui_container/playlist_manager/playlist_container/playlist_music_exec").next_track()
 
 	return
 
@@ -122,7 +122,7 @@ def do_current_action():
 def load_next_timer(use_zero=False):
 	global current_event_ts
 	# read timestamp
-	ts = 0 if use_zero else op('../audio_analysis_and_player/timecode1')['total_seconds']
+	ts = 0 if use_zero else op('/project1/ui_container/playlist_container/audio_analysis_and_player/timecode1')['total_seconds']
 	# print("selected_csv_exec:ts:", ts)
 
 	# get next upcoming event
