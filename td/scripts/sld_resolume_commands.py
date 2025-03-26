@@ -3,14 +3,6 @@ import random
 
 TRANSITION_DURATION = 2.0
 
-layer_bg = 1
-layer_pulses = 2
-layer_effects = 4
-
-LAYER_BG = 1
-LAYER_MASK = 2
-LAYER_TOP = 3
-
 def send(loc, val):
   op('resolume').sendOSC(loc, [val])
   return
@@ -42,17 +34,6 @@ def update_transition_type(layer, val):
   send('/composition/layers/{}/video/transition/mixer/blendmode'.format(layer), val)
   return
 
-# update the bg.
-def activate_bg_column(column_id):
-  send('/composition/layers/{}/clips/{}/connect'.format(layer_bg, column_id), 1)
-  return
-
-
-# def activate_effects_column(column_id):
-#   send('/composition/layers/{}/clips/{}/connect'.format(layer_effects, column_id), 1)
-#   return
-
-
 def do_autopilot(yes):
   val = 3 if yes else 1
   send("/composition/layers/1/autopilot", val)
@@ -64,15 +45,8 @@ def update_transition_time(layer, val):
   send("/composition/layers/{}/transition/duration".format(layer), val/10)
   return
 
-def update_blend_mode(layer, val):
-  send("/composition/layers/{}/video/transition/mixer/blendmode".format(layer), val)
-  return
-
-# # update transition time for pulses/bgs layer
-# def update_transition_time(val, layers=2):
-#   for i in range(1, layers+1):
-#     print("updating duration:", i, val)
-#     send("/composition/layers/{}/transition/duration".format(i), val)
+# def update_blend_mode(layer, val):
+#   send("/composition/layers/{}/video/transition/mixer/blendmode".format(layer), val)
 #   return
 
 
@@ -92,6 +66,7 @@ def update_tempo(bpm):
   return
 
 def update_bpm(bpm):
+  print("sld_resolume_commands::updating bpm:", bpm)
   send('/composition/tempocontroller/tempo', tdu.remap(bpm, 20, 500, 0, 1))
   return
 
@@ -116,60 +91,61 @@ def clear_layer(layer):
   send('/composition/layers/{}/clear'.format(layer), 0)
   return
 
-def first_layer_only_instant_fadeout_others(first_clip_idx = 1):
-  print("sld_resolume_commands::first_layer_only_instant_fadeout_others")
-  send('/composition/layers/2/clear', 0)
-  send('/composition/layers/3/clear', 0)
-  send('/composition/layers/4/clear', 0)
-  send('/composition/layers/1/clips/{}/connect'.format(first_clip_idx), 1)
-  return
+# def first_layer_only_instant_fadeout_others(first_clip_idx = 1):
+#   print("sld_resolume_commands::first_layer_only_instant_fadeout_others")
+#   send('/composition/layers/2/clear', 0)
+#   send('/composition/layers/3/clear', 0)
+#   send('/composition/layers/4/clear', 0)
+#   send('/composition/layers/1/clips/{}/connect'.format(first_clip_idx), 1)
+#   return
 
 
-# choose one effect to be the audio-responsive effect out of these
-bg_layer_audio_effects = [
-    'huerotate',
-    'suckr'
-]
+# # choose one effect to be the audio-responsive effect out of these
+# bg_layer_audio_effects = [
+#     'huerotate',
+#     'suckr'
+# ]
 
 
-def pick_random_bg_layer_audio_effect():
-  mychoice = random.choice(bg_layer_audio_effects)
-  for effect in bg_layer_audio_effects:
-    val = 0 if effect == mychoice else 1
-    send('/composition/layers/1/video/effects/{}/bypassed'.format(effect), val)
+# def pick_random_bg_layer_audio_effect():
+#   mychoice = random.choice(bg_layer_audio_effects)
+#   for effect in bg_layer_audio_effects:
+#     val = 0 if effect == mychoice else 1
+#     send('/composition/layers/1/video/effects/{}/bypassed'.format(effect), val)
 
 
 # what to do on change
 
-# 0-3
-section = 0
+# # 0-3
+# section = 0
 
-# 0-3
-intensity = 0
+# # 0-3
+# intensity = 0
 
-current_mask = -1
-max_mask = 18
+# current_mask = -1
+# max_mask = 18
 
 
 def update_section():
-  if section == 0:
-    add_mask()
+  print("DEPRECATED")
+  # if section == 0:
+  #   add_mask()
   return
 
 
-def add_mask():
-  global current_mask
-  target = current_mask
-  while target == current_mask:
-    target = random.randint(0, max_mask)
+# def add_mask():
+#   global current_mask
+#   target = current_mask
+#   while target == current_mask:
+#     target = random.randint(0, max_mask)
 
-  # set appropriate transition
-  send('/composition/layers/2/video/opacity/behaviour/duration',
-       TRANSITION_DURATION / 604800.0)
-  send('/composition/layers/2/video/opacity/behaviour/playdirection', 2)
+#   # set appropriate transition
+#   send('/composition/layers/2/video/opacity/behaviour/duration',
+#        TRANSITION_DURATION / 604800.0)
+#   send('/composition/layers/2/video/opacity/behaviour/playdirection', 2)
 
-  # activate clip
-  send('/composition/layers/2/clips/{}/connect'.format(target), 1)
-  current_mask = target
-  return
+#   # activate clip
+#   send('/composition/layers/2/clips/{}/connect'.format(target), 1)
+#   current_mask = target
+#   return
 

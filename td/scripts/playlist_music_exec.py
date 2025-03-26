@@ -94,7 +94,7 @@ def pickRandomTrack():
 def next_track():
   # print("next_track called...")
   # first, clear out any timer stuff
-  op('/project1/ui_container/playlist_container/playlist_manager/timer1').par.initialize.pulse()
+  op('/project1/ui_container/playlist_manager/timer1').par.initialize.pulse()
   op("/project1/ui_container/resolume_container/section_timer").par.initialize.pulse()
   # print("next_track called...")
   # TODO do I need to confirm toggles?

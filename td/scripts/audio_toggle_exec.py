@@ -11,7 +11,7 @@ def onValueChange(par, prev):
 
 	if (par.eval() == True):
 		# turn off internal playlist audio
-		op('/project1/ui_container/playlist_container/playlist_toggle_exec').par.Value0 = False
+		op('/project1/ui_container/playlist_manager/playlist_toggle').par.Value0 = False
 		op('audiodevin1').bypass = 0
 	else:
 		op('audiodevin1').bypass = 1

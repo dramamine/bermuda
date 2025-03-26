@@ -10,6 +10,8 @@ import sld_resolume_commands as resolume_commands
 from collections import namedtuple
 import random
 
+config = mod("/project1/ui_container/resolume_container/resolume_configuration")
+
 NUM_SECTIONS = 4
 
 LAYER_BG = 1
@@ -17,92 +19,14 @@ LAYER_MASK = 2
 LAYER_TOP = 3
 LAYER_POST_EFFECTS = 5
 
-# trasnsitions that are fun for the bg layer
-t = [1, 3, 8, 10, 12, 13, 15, 17, 18, 19, 21, 31, 39, 46, 48]
-
-# these numbers match up with empty clips in the resolume composition
-v = [0, 40, 72, 89]
-bg_clips_by_intensity = [
-  range(v[0]+1, v[1]),
-  range(v[0]+1, v[2]),
-  range(v[1]+1, v[2]),
-  range(v[1]+1, v[3]),
-  range(v[2]+1, v[3]),
-]
-
-# these numbers match up with empty clips in the resolume composition
-
-m = [0, 16, 27, 39]
-mask_clips_by_intensity = [
-  range(m[0]+1, m[1]),
-  range(m[0]+1, m[2]),
-  range(m[1]+1, m[2]),
-  range(m[1]+1, m[3]),
-  range(m[2]+1, m[3]),
-]
-
-top_clips = range(1, 20)
-
-# list of tuples (intensity, layer, effect_name, is_audio_reactive)
-effects = [
-  (0, LAYER_BG, "slide"),
-  (0, LAYER_BG, "slide2"),
-  (0, LAYER_BG, "huerotate", True),
-  # placeholder: note that huerotate2 is special and is not in this list
-  (0, LAYER_BG, "suckr"),
-  (0, LAYER_BG, "threshold", True),
-  (0, LAYER_BG, "vignette", True),
-  (0, LAYER_BG, "blow", True),
-  (0, LAYER_BG, "edgedetection"),
-  (0, LAYER_BG, "ezradialcloner"),
-  (0, LAYER_BG, "ezradialcloner2"),
-  (0, LAYER_BG, "goo"),
-  (0, LAYER_BG, "gridcloner"),
-  (0, LAYER_BG, "heat", True),
-  (0, LAYER_BG, "heat2", True),
-  (0, LAYER_BG, "infinitezoom"),
-  (0, LAYER_BG, "infinitezoom2", True),
-  (0, LAYER_BG, "kaleidoscope"),
-  (0, LAYER_BG, "kaleidoscope2"),
-  (0, LAYER_BG, "kaleidoscope3"),
-  (0, LAYER_BG, "linearcloner"),
-  (0, LAYER_BG, "metashape"),
-  (0, LAYER_BG, "mirror"),
-  (0, LAYER_BG, "pointgrid"),
-  (0, LAYER_BG, "polarkaleido"),
-  (0, LAYER_BG, "polarkaleido2"),
-  (0, LAYER_BG, "polarkaleido3"),
-  (0, LAYER_BG, "polarkaleido4"),
-  (0, LAYER_BG, "polarkaleido5"),
-
-  (0, LAYER_MASK, "slide", True),
-  (0, LAYER_MASK, "slide2"),
-  (0, LAYER_MASK, "slide3"),
-  (0, LAYER_MASK, "radialmask"),
-  (0, LAYER_MASK, "kaleidoscope"),
-  (1, LAYER_MASK, "kaleidoscope2"),
-  (2, LAYER_MASK, "kaleidoscope3"),
-  (0, LAYER_MASK, "ezradialcloner"),
-  (0, LAYER_MASK, "displace", True),
-  (1, LAYER_MASK, "displace2", True),
-  (2, LAYER_MASK, "displace3", True),
-  (0, LAYER_MASK, "distortion", True),
-  (1, LAYER_MASK, "distortion2", True),
-  (2, LAYER_MASK, "distortion3", True),
-  (2, LAYER_MASK, "trails"),
-  (1, LAYER_MASK, "greenhousevideo"),
-]
-
-dashboard_effects = [
-  (0, LAYER_POST_EFFECTS, "suckr"),
-  (0, LAYER_POST_EFFECTS, "threshold"),
-  (0, LAYER_POST_EFFECTS, "vignette"),
-  (0, LAYER_POST_EFFECTS, "blow"),
-  (0, LAYER_POST_EFFECTS, "edgedetection"),
-  (0, LAYER_POST_EFFECTS, "heat"),
-  (0, LAYER_POST_EFFECTS, "heat2"),
-  (0, LAYER_POST_EFFECTS, "infinitezoom"),
-]
+t = config.t
+v = config.v
+bg_clips_by_intensity = config.bg_clips_by_intensity
+m = config.m
+mask_clips_by_intensity = config.mask_clips_by_intensity
+top_clips = config.top_clips
+effects = config.effects
+dashboard_effects = config.dashboard_effects
 
 # get the effects above where the intensity is 0
 effects_by_intensity = [
@@ -124,7 +48,11 @@ intensity_templates = [
   # 0-4
   [IntensityTemplate(1, 0, (0, 0, 0))],
   [IntensityTemplate(1, 0, (0, 0, 0))],
-  [IntensityTemplate(1, 0, (1, 0, 0))],
+  [ # 0 or 1 simple effect
+    IntensityTemplate(1, 0, (0, 0, 0)),
+    IntensityTemplate(1, 0, (0, 0, 0)),
+    IntensityTemplate(1, 0, (1, 0, 0))
+  ],
   [IntensityTemplate(1, 1, (2, 0, 0))],
   [IntensityTemplate(2, 0, (1, 0, 0))],
 
@@ -246,41 +174,6 @@ intensity_templates = [
   ],
 ]
 
-
-def divide_into_twos(num):
-  if num <= 0:
-    return [0, 0]
-  numbers = sorted(random.sample(range(num), 1))
-  bob1 = numbers[0]
-  bob2 = num - numbers[0]
-  return random.choice( [[bob1, bob2], [bob2, bob1]] )
-
-def divide_into_threes(num):
-  if num <= 0:
-    return [0, 0, 0]
-  numbers = sorted(random.sample(range(num), 2))
-  bob1 = numbers[0]
-  bob2 = numbers[1] - numbers[0]
-  bob3 = num - numbers[1]
-  return random.choice([ [bob1, bob2, bob3], [bob3, bob2, bob1] ])
-
-def get_array_with_total(len, val, cap = None):
-  res = [0] * len
-  while val > 0:
-    idx = random.randint(0, len - 1)
-    if cap and res[idx] >= cap:
-        val -=1
-        continue
-    res[idx] += 1
-    val -= 1
-  return res
-
-def reduce_fx(fx, num):
-  while (sum(fx) > num):
-    idx = random.randint(0, len(fx) - 1)
-    if fx[idx] > 0:
-      fx[idx] -= 1
-  return fx
 
 
 def get_clips_intensity(active_layers, clip_intensity):
