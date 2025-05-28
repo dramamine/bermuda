@@ -91,6 +91,19 @@ def clear_layer(layer):
   send('/composition/layers/{}/clear'.format(layer), 0)
   return
 
+def activate_diagram_row_adjustment_clip():
+  activate_clip(7, 4)
+  return
+
+
+def deactivate_diagram_row_adjustment_clip():
+  activate_clip(7, 1)
+  return
+
+def set_adjustment_clip_transport_time(val):
+  send('/composition/layers/7/clips/4/transport/position', val)
+  return
+
 # def first_layer_only_instant_fadeout_others(first_clip_idx = 1):
 #   print("sld_resolume_commands::first_layer_only_instant_fadeout_others")
 #   send('/composition/layers/2/clear', 0)
