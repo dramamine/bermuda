@@ -1,4 +1,4 @@
-
+# nosec
 import sld_resolume_commands as resolume_commands
 from collections import namedtuple
 import random
@@ -48,9 +48,8 @@ import random
 NUM_SECTIONS = 4
 
 LAYER_BG1 = 1
-LAYER_BG2 = 2
-LAYER_TOP = 3
-LAYER_MASK = 4
+LAYER_TOP = 2
+LAYER_MASK = 3
 LAYER_POST_EFFECTS = 6
 
 
@@ -66,7 +65,7 @@ ACTIVATE_TOP_CLIP_FILL_GAP = 'ACTIVATE_TOP_CLIP_FILL_GAP'
 REMOVE_COLOR_FADE = 'REMOVE_COLOR_FADE'
 
 template_flow_option = FlowTemplate(
-    initial_clips=[(LAYER_BG1, LAYER_BG2, LAYER_MASK)],
+    initial_clips=[LAYER_BG1, LAYER_MASK],
     section_1_action=ADD_COLOR_FADE,
     section_2_action=ACTIVATE_TOP_CLIP_FILL_GAP,
     section_3_action=REMOVE_COLOR_FADE,
@@ -103,8 +102,8 @@ top_clips = range(1, 20)
 effects = [
     (0, LAYER_BG1, "slide"),
     (0, LAYER_BG1, "slide2"),
-    (0, LAYER_BG1, "huerotate", True),
-    # placeholder: note that huerotate2 is special and is not in this list
+    # placeholder: note that huerotate is special and is not in this list
+    (0, LAYER_BG1, "huerotate2", True),
     (0, LAYER_BG1, "suckr"),
     (0, LAYER_BG1, "threshold", True),
     (0, LAYER_BG1, "vignette", True),
@@ -310,9 +309,8 @@ def get_clips_intensity(active_layers, clip_intensity):
   if active_layers == 1:
     return [clip_intensity]
   if active_layers == 2:
-    return [clip_intensity, clip_intensity]  # divide_into_twos(clip_intensity)
+    return [clip_intensity, clip_intensity]
   if active_layers == 3:
-    # divide_into_threes(clip_intensity)
     return [clip_intensity, clip_intensity, clip_intensity]
 
 
@@ -350,49 +348,30 @@ class ActiveStuff:
     self.incremental_section_effect = 0
 
   def load(self, mb):
+    print("sld_resolume_controller::load called with mb:", mb)
     self.mb = mb
+    self.template_flow_option = template_flow_option
 
-  def choose_random_clips(self, active_layers, clip_intensity):
+  def choose_random_clips(self):
     clips = []
     initial_clips = self.template_flow_option.initial_clips
+    clip_intensity = self.mb.clip_intensity
+
+    print("initial_clips:", initial_clips, "clip_intensity:", clip_intensity)
+
     if LAYER_BG1 in initial_clips:
       chosen_clip = random.choice(bg_clips_by_intensity[clip_intensity])
       clips.append((LAYER_BG1, chosen_clip))
-    if LAYER_BG2 in initial_clips:
-      chosen_clip = random.choice(bg_clips_by_intensity[clip_intensity])
-      clips.append((LAYER_BG2, chosen_clip))
     if LAYER_MASK in initial_clips:
       chosen_clip = random.choice(mask_clips_by_intensity[clip_intensity])
       clips.append((LAYER_MASK, chosen_clip))
     if LAYER_TOP in initial_clips:
       chosen_clip = random.choice(top_clips)
       clips.append((LAYER_TOP, chosen_clip))
+    # special case where we show black top clip when LAYER_MASK is present but LAYER_TOP is not
     elif LAYER_MASK in initial_clips:
       clips.append([LAYER_TOP, 1]) # black top clip
-
-    # if active_layers >= 1:
-    #   # get range for BG layer
-    #   bg_possibilities = bg_clips_by_intensity[clip_intensity]
-    #   chosen_clip = random.choice(bg_possibilities)
-    #   clips.append((LAYER_BG1, chosen_clip))
-
-    # if active_layers >= 2:
-    #   # get range for BG layer
-    #   bg_possibilities = bg_clips_by_intensity[clip_intensity]
-    #   chosen_clip = random.choice(bg_possibilities)
-    #   clips.append((LAYER_BG2, chosen_clip))
-
-    # if active_layers >= 2:
-    #   # get range for MASK layer
-    #   mask_possibilities = mask_clips_by_intensity[clip_intensity]
-    #   chosen_clip = random.choice(mask_possibilities)
-    #   clips.append((LAYER_MASK, chosen_clip))
-
-    # if active_layers >= 3:
-    #   # get range for TOP layer
-    #   chosen_clip = random.choice(top_clips)
-    #   clips.append((LAYER_TOP, chosen_clip))
-
+    print("using clips:", clips)
     return clips
 
   def stringify_my_choices(self, mb, clips, fx):
@@ -438,9 +417,7 @@ class ActiveStuff:
       resolume_commands.update_transition_time(i, transition_time)
 
     # start choosing clips
-    self.clips = self.choose_random_clips(
-      self.mb.active_layers, self.mb.clip_intensity
-    )
+    self.clips = self.choose_random_clips()
 
     if len(self.clips) < 1:
       print("ERROR: weird, clips was empty.",
@@ -457,20 +434,19 @@ class ActiveStuff:
 
   def activate(self):
       for c in self.clips:
-        # print("sld_resolume_controller::activate layer {} clip {}".format(c[0], c[1]))
+        print("sld_resolume_controller::activate layer {} clip {}".format(c[0], c[1]))
         resolume_commands.activate_clip(c[0], c[1])
 
-      # clearing out old clips
-      if (self.mb.active_layers < 3):
-        resolume_commands.clear_layer(4)
-        resolume_commands.clear_layer(3)
-      if (self.mb.active_layers < 2):
-        resolume_commands.clear_layer(2)
+      # check clips, if none of the clips[0] prperties are LAYER_MASK, then clear that layer
+      if LAYER_MASK not in [c[0] for c in self.clips]:
+        print("sld_resolume_controller::activate: clearing layer {}".format(LAYER_MASK))
+        resolume_commands.clear_layer(LAYER_MASK)
+      if LAYER_TOP not in [c[0] for c in self.clips]:
+        print("sld_resolume_controller::activate: clearing layer {}".format(LAYER_TOP))
+        resolume_commands.clear_layer(LAYER_TOP)
 
       # activate fx
       for f in self.fx:
-        # TODO call resolume about this
-        # print("sld_resolume_controller::activate layer {} fx {}".format(f[1], f[2]))
         resolume_commands.activate_effect(f[1], f[2])
 
       self.start_section_timer()
@@ -486,27 +462,28 @@ class ActiveStuff:
       return
 
   def increment_section(self):
-    # print("sld_resolume_controller::increment_section called, it was:", self.section, self.section % NUM_SECTIONS)
     self.section = (self.section + 1) % NUM_SECTIONS
-    # print("sld_resolume_controller::increment_section called, its now:", self.section)
     op('section').par.Value0 = self.section
 
     # switch statement based on section
     if self.section == 0:
+      print("self.section is 0 so im preparing and activating")
       self.prepare()
       self.activate()
     elif self.section == 1:
       # add a variation
       if template_flow_option.section_1_action == ADD_COLOR_FADE:
-        self.fx.append((LAYER_BG1, "huerotate2"))
-        resolume_commands.activate_effect(LAYER_BG1, "huerotate2")
-        resolume_commands.send(
-            "/composition/layers/1/video/effects/huerotate2/effect/huerotate", 0.0)
+        print("sld_resolume_controller::increment_section: section 1 ADD_COLOR_FADE")
+        self.fx.append((LAYER_BG1, "huerotate"))
+        resolume_commands.activate_effect(LAYER_BG1, "huerotate")
+        resolume_commands.send("/composition/layers/1/video/effects/huerotate/effect/huerotate", 0.0)
+        resolume_commands.send("/composition/layers/1/video/effects/huerotate/effect/huerotate/behaviour/playdirection", 2)
         # FUN INFO: in Resolume, set the effect Start Settings -> Clip Trigger OFF to prevent re-animation when switching clips
-        # print("sld_resolume_controller::added huerotate2 to top layer since we incremented section")
+        # print("sld_resolume_controller::added huerotate to top layer since we incremented section")
 
-    #TODO stopping here but here's where I'd add more section transitions
     elif self.section == 2:
+
+      # TODO could delete this block maybe
       # update bg clip
       if len(self.clips) < 1:
         print(
@@ -515,36 +492,42 @@ class ActiveStuff:
         self.activate()
         return
 
-      clips_intensity = get_clips_intensity(
-          self.mb.active_layers, self.mb.clip_intensity)
-      # print("DEBUG: section 2:", clips_intensity, clips_intensity[0])
-      bg_clip_intensity = clips_intensity[0]
-      # get a random choice that is not the current choice
-      chosen_clip = random.choice(bg_clips_by_intensity[bg_clip_intensity])
-      while chosen_clip == self.clips[0][1]:
+      if template_flow_option.section_2_action == ACTIVATE_TOP_CLIP_FILL_GAP:
+        print("sld_resolume_controller::increment_section: section 2 ACTIVATE_TOP_CLIP_FILL_GAP")
+        # print("sld_resolume_controller::section 2: activating top clip to fill gap")
+        # activate a top clip to fill the gap
+        chosen_clip = random.choice(top_clips)
+        self.clips.append((LAYER_TOP, chosen_clip))
+        resolume_commands.activate_clip(LAYER_TOP, chosen_clip)
+
+      elif template_flow_option.section_2_action == 'DEPRECATED_SECTION_2_ACTION':
+        print("sld_resolume_controller::increment_section: section 2 DEPRECATED_SECTION_2_ACTION")
+        clips_intensity = get_clips_intensity(
+            self.mb.active_layers, self.mb.clip_intensity)
+        # print("DEBUG: section 2:", clips_intensity, clips_intensity[0])
+        bg_clip_intensity = clips_intensity[0]
+        # get a random choice that is not the current choice
         chosen_clip = random.choice(bg_clips_by_intensity[bg_clip_intensity])
+        while chosen_clip == self.clips[0][1]:
+          chosen_clip = random.choice(bg_clips_by_intensity[bg_clip_intensity])
 
-      self.clips[0] = (LAYER_BG1, chosen_clip)
-      resolume_commands.activate_clip(LAYER_BG1, chosen_clip)
+        self.clips[0] = (LAYER_BG1, chosen_clip)
+        resolume_commands.activate_clip(LAYER_BG1, chosen_clip)
 
-      # print("sld_resolume_controller::clips now:", self.clips[0])
-      pass
     elif self.section == 3:
-      # turn off the variation
-        self.fx.append((LAYER_BG1, "huerotate3"))
-        resolume_commands.activate_effect(LAYER_BG1, "huerotate3")
-        resolume_commands.send(
-            "/composition/layers/1/video/effects/huerotate3/effect/huerotate", 0.0
-        )
+      if template_flow_option.section_3_action == REMOVE_COLOR_FADE:
+        print("sld_resolume_controller::increment_section: section 3 REMOVE_COLOR_FADE")
+        resolume_commands.send("/composition/layers/1/video/effects/huerotate/effect/huerotate/behaviour/playdirection", 0)
     return
 
+  # TODO see if this is working as intended or if its just overkill
   def deactivate_active_fx(self):
     # deactivate fx
     for f in self.fx:
       # print("sld_resolume_controller::deactivate fx {} on layer {}".format(f[1], f[0]))
       resolume_commands.deactivate_effect(f[0], f[1])
-    # print("deactivating huerotate2")
-    # resolume_commands.deactivate_effect(LAYER_BG1, "huerotate2")
+    # print("deactivating huerotate")
+    resolume_commands.deactivate_effect(LAYER_BG1, "huerotate")
     return
 
   def deactivate_all_fx(self):
@@ -554,8 +537,7 @@ class ActiveStuff:
     for f in dashboard_effects:
       resolume_commands.deactivate_effect(f[1], f[2])
 
-    resolume_commands.deactivate_effect(LAYER_BG1, "huerotate2")
-    resolume_commands.deactivate_effect(LAYER_BG1, "huerotate3")
+    resolume_commands.deactivate_effect(LAYER_BG1, "huerotate")
     return
 
 
@@ -565,7 +547,6 @@ ast = ActiveStuff(IntensityTemplate(2, 0, (1, 0, 0)))
 def load_pattern_and_play(transition_time=2):
   # TODO better reset?
   # full_reset()
-
   i = int(op('intensity_chop').rows()[0][0].val)
   print("sld_resolume_controller::load_pattern_and_play with intensity: ", i)
 
