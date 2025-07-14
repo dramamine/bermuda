@@ -66,7 +66,7 @@ def update_tempo(bpm):
   return
 
 def update_bpm(bpm):
-  print("sld_resolume_commands::updating bpm:", bpm)
+  # print("sld_resolume_commands::updating bpm:", bpm)
   send('/composition/tempocontroller/tempo', tdu.remap(bpm, 20, 500, 0, 1))
   return
 

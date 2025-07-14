@@ -50,7 +50,7 @@ NUM_SECTIONS = 4
 LAYER_BG1 = 1
 LAYER_TOP = 2
 LAYER_MASK = 3
-LAYER_POST_EFFECTS = 6
+LAYER_POST_EFFECTS = 4
 
 
 FlowTemplate = namedtuple('FlowTemplate', [
@@ -76,7 +76,7 @@ template_flow_option = FlowTemplate(
 t = [1, 3, 8, 10, 12, 13, 15, 17, 18, 19, 21, 31, 39, 46, 48]
 
 # these numbers match up with empty clips in the resolume composition
-v = [0, 40, 72, 89]
+v = [0, 35, 66, 84]
 bg_clips_by_intensity = [
     range(v[0]+1, v[1]),
     range(v[0]+1, v[2]),
@@ -87,7 +87,7 @@ bg_clips_by_intensity = [
 
 # these numbers match up with empty clips in the resolume composition
 
-m = [0, 16, 27, 39]
+m = [0, 16, 27, 38]
 mask_clips_by_intensity = [
     range(m[0]+1, m[1]),
     range(m[0]+1, m[2]),
@@ -96,7 +96,7 @@ mask_clips_by_intensity = [
     range(m[2]+1, m[3]),
 ]
 
-top_clips = range(1, 20)
+top_clips = range(2, 23)
 
 # list of tuples (intensity, layer, effect_name, is_audio_reactive)
 effects = [
@@ -129,6 +129,8 @@ effects = [
     (0, LAYER_BG1, "polarkaleido3"),
     (0, LAYER_BG1, "polarkaleido4"),
     (0, LAYER_BG1, "polarkaleido5"),
+    (0, LAYER_BG1, "colormorph"),
+    (0, LAYER_BG1, "greenhousevideo"),
 
     (0, LAYER_MASK, "slide", True),
     (0, LAYER_MASK, "slide2"),
@@ -348,7 +350,7 @@ class ActiveStuff:
     self.incremental_section_effect = 0
 
   def load(self, mb):
-    print("sld_resolume_controller::load called with mb:", mb)
+    # print("sld_resolume_controller::load called with mb:", mb)
     self.mb = mb
     self.template_flow_option = template_flow_option
 
@@ -357,7 +359,7 @@ class ActiveStuff:
     initial_clips = self.template_flow_option.initial_clips
     clip_intensity = self.mb.clip_intensity
 
-    print("initial_clips:", initial_clips, "clip_intensity:", clip_intensity)
+    # print("initial_clips:", initial_clips, "clip_intensity:", clip_intensity)
 
     if LAYER_BG1 in initial_clips:
       chosen_clip = random.choice(bg_clips_by_intensity[clip_intensity])
@@ -371,7 +373,7 @@ class ActiveStuff:
     # special case where we show black top clip when LAYER_MASK is present but LAYER_TOP is not
     elif LAYER_MASK in initial_clips:
       clips.append([LAYER_TOP, 1]) # black top clip
-    print("using clips:", clips)
+    # print("using clips:", clips)
     return clips
 
   def stringify_my_choices(self, mb, clips, fx):
@@ -434,15 +436,15 @@ class ActiveStuff:
 
   def activate(self):
       for c in self.clips:
-        print("sld_resolume_controller::activate layer {} clip {}".format(c[0], c[1]))
+        # print("sld_resolume_controller::activate layer {} clip {}".format(c[0], c[1]))
         resolume_commands.activate_clip(c[0], c[1])
 
       # check clips, if none of the clips[0] prperties are LAYER_MASK, then clear that layer
       if LAYER_MASK not in [c[0] for c in self.clips]:
-        print("sld_resolume_controller::activate: clearing layer {}".format(LAYER_MASK))
+        # print("sld_resolume_controller::activate: clearing layer {}".format(LAYER_MASK))
         resolume_commands.clear_layer(LAYER_MASK)
       if LAYER_TOP not in [c[0] for c in self.clips]:
-        print("sld_resolume_controller::activate: clearing layer {}".format(LAYER_TOP))
+        # print("sld_resolume_controller::activate: clearing layer {}".format(LAYER_TOP))
         resolume_commands.clear_layer(LAYER_TOP)
 
       # activate fx
@@ -451,11 +453,12 @@ class ActiveStuff:
 
       self.start_section_timer()
       print(self.stringify_my_choices(self.mb, self.clips, self.fx))
+      resolume_commands.resync()
       return
 
   def start_section_timer(self):
       bpm = op('/project1/ui_container/resolume_container/bpm').par.Value0
-      print("TODO WORKING?? sld_resolume_controller::resetting timer with bpm", bpm)
+      # print("TODO WORKING?? sld_resolume_controller::resetting timer with bpm", bpm)
       timer_length = (32 * 60) / bpm
       op('section_timer').par.length = timer_length
       op('section_timer').par.start.pulse()
@@ -467,9 +470,10 @@ class ActiveStuff:
 
     # switch statement based on section
     if self.section == 0:
-      print("self.section is 0 so im preparing and activating")
+      print("sld_resolume_controller::increment_section: section 0 prepare and activate")
       self.prepare()
       self.activate()
+      print("done preparing and activating")
     elif self.section == 1:
       # add a variation
       if template_flow_option.section_1_action == ADD_COLOR_FADE:
@@ -581,9 +585,11 @@ def fadeout(transition_time):
 
 def on_bpm_change(bpm, restart_section=True, resync=False):
   print("resolume_controller::update_bpm called", restart_section, bpm)
+
   resolume_commands.update_bpm(bpm)
   if resync:
     resolume_commands.resync()
+
   if restart_section:
     print("bpm change load pattern and play")
     load_pattern_and_play()
@@ -603,6 +609,9 @@ def on_section_timer_complete():
   ast.increment_section()
   return
 
+
+def get_intensity():
+  return int(op('intensity_chop')[0, 0])
 
 def set_intensity(num):
   global intensity

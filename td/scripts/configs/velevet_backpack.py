@@ -460,7 +460,7 @@ def fadeout(transition_time):
 
 
 def on_bpm_change(bpm, restart_section=True, resync=False):
-  print("resolume_controller::update_bpm called", restart_section, bpm)
+  # print("resolume_controller::update_bpm called", restart_section, bpm)
   resolume_commands.update_bpm(bpm)
   if resync:
     resolume_commands.resync()
