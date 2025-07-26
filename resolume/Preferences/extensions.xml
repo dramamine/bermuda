@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ExtensionListInspector name="ExtensionListInspector">
+	<versionInfo name="Resolume Arena" majorVersion="7" minorVersion="18" microVersion="2" revision="29742"/>
+	<Lists>
+		<List type="Source">
+			<Items>
+				<Item uniqueId="736772465707583394" open="0"/>
+				<Item uniqueId="c_35de2952-eebe-4238-ac4a-2e9864da6621" open="0"/>
+				<Item uniqueId="c_3c7734fc-1105-476b-8f36-0d15b6429371" open="0"/>
+			</Items>
+		</List>
+		<List type="Effect">
+			<Items>
+				<Item uniqueId="17122039101699797593" open="0"/>
+				<Item uniqueId="9611534302831352414" open="0"/>
+				<Item uniqueId="Audio Effects" open="0"/>
+				<Item uniqueId="MWWP" open="0"/>
+				<Item uniqueId="Wire Effects" open="0"/>
+				<Item uniqueId="sy02" open="0"/>
+			</Items>
+		</List>
+	</Lists>
+</ExtensionListInspector>
+

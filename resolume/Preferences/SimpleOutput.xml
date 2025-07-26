@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SimpleSetup advancedModeEnabled="1">
+	<Outputs>
+		<OutputDeviceSpout name="Composition" deviceId="SpoutComposition" idHash="7129303107185582603" width="1920" height="1080"/>
+	</Outputs>
+</SimpleSetup>
+
