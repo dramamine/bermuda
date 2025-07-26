@@ -13,7 +13,7 @@ LAYER_POST_EFFECTS = 5
 t = [1, 3, 8, 10, 12, 13, 15, 17, 18, 19, 21, 31, 39, 46, 48]
 
 # these numbers match up with empty clips in the resolume composition
-v = [0, 38]
+v = [0, 34]
 bg_clips_by_intensity = [
     range(v[0]+1, v[1]),
     range(v[0]+1, v[1]),
@@ -82,125 +82,15 @@ intensity_templates = [
         IntensityTemplate(1, 0, (0, 0, 0)),
         IntensityTemplate(1, 0, (1, 0, 0))
     ],
-    [IntensityTemplate(1, 1, (2, 0, 0))],
-    [IntensityTemplate(2, 0, (1, 0, 0))],
+    [  # 0 or 1 simple effect
+        IntensityTemplate(1, 0, (0, 0, 0)),
+        IntensityTemplate(1, 0, (1, 0, 0)),
+        IntensityTemplate(1, 0, (1, 0, 0))
+    ],
+    [IntensityTemplate(1, 1, (1, 0, 0))],
 
     # 5
-    [
-        IntensityTemplate(1, 1, (1, 1, 0)),
-        IntensityTemplate(1, 1, (2, 0, 0)),
-        IntensityTemplate(2, 1, (2, 0, 0)),
-        IntensityTemplate(2, 1, (1, 0, 0)),
-    ],
-
-    # 6
-    [
-        IntensityTemplate(1, 2, (1, 1, 0)),
-        IntensityTemplate(1, 2, (2, 0, 0)),
-        IntensityTemplate(2, 1, (1, 1, 0)),
-        IntensityTemplate(2, 1, (2, 0, 0)),
-    ],
-
-    # 7
-    [
-        IntensityTemplate(2, 2, (1, 1, 0)),
-        IntensityTemplate(2, 2, (2, 0, 0)),
-        IntensityTemplate(2, 3, (1, 1, 0)),
-        IntensityTemplate(2, 3, (2, 0, 0)),
-    ],
-
-    # 8
-    [
-        IntensityTemplate(2, 2, (2, 1, 0)),
-        IntensityTemplate(2, 2, (3, 0, 0)),
-        IntensityTemplate(2, 3, (1, 1, 0)),
-        IntensityTemplate(2, 3, (2, 0, 0)),
-    ],
-
-    # 9
-    [
-        IntensityTemplate(3, 2, (1, 1, 0)),
-        IntensityTemplate(3, 2, (2, 0, 0)),
-        IntensityTemplate(3, 3, (1, 0, 0)),
-        IntensityTemplate(3, 3, (1, 0, 0)),
-    ],
-
-    # 10
-    [
-        IntensityTemplate(2, 4, (1, 0, 0)),
-        IntensityTemplate(3, 3, (1, 0, 0)),
-    ],
-
-    # 11
-    [
-        IntensityTemplate(2, 4, (1, 1, 0)),
-        IntensityTemplate(2, 4, (2, 0, 0)),
-        IntensityTemplate(3, 3, (1, 1, 0)),
-        IntensityTemplate(3, 3, (2, 0, 0)),
-    ],
-
-    # 12
-    [
-        IntensityTemplate(2, 4, (1, 1, 1)),
-        IntensityTemplate(2, 4, (2, 1, 0)),
-        IntensityTemplate(2, 4, (3, 0, 0)),
-        IntensityTemplate(3, 3, (1, 1, 1)),
-        IntensityTemplate(3, 3, (2, 1, 0)),
-        IntensityTemplate(3, 3, (3, 0, 0)),
-    ],
-
-    # 13
-    [
-        IntensityTemplate(2, 4, (2, 1, 1)),
-        IntensityTemplate(2, 4, (3, 1, 0)),
-        IntensityTemplate(3, 3, (2, 1, 1)),
-        IntensityTemplate(3, 3, (3, 1, 0)),
-    ],
-
-    # 14
-    [
-        IntensityTemplate(2, 4, (2, 2, 1)),
-        IntensityTemplate(2, 4, (3, 2, 0)),
-        IntensityTemplate(3, 3, (2, 2, 1)),
-        IntensityTemplate(3, 3, (3, 2, 0)),
-    ],
-
-    # 15
-    [
-        IntensityTemplate(3, 3,  (3, 1, 1)),
-        IntensityTemplate(3, 3,  (3, 2, 1))
-    ],
-
-    # 16
-    [
-        IntensityTemplate(3, 3,  (4, 1, 0)),
-        IntensityTemplate(3, 3,  (4, 0, 1)),
-        IntensityTemplate(3, 3,  (3, 1, 1)),
-    ],
-
-    # 17
-    [
-        IntensityTemplate(3, 4,  (3, 1, 0)),
-        IntensityTemplate(3, 4,  (3, 0, 1)),
-        IntensityTemplate(3, 4,  (2, 1, 1)),
-    ],
-
-    # 18
-    [
-        IntensityTemplate(3, 4,  (4, 1, 0)),
-        IntensityTemplate(3, 4,  (4, 0, 1)),
-        IntensityTemplate(3, 4,  (3, 1, 1)),
-    ],
-
-    # 19
-    [
-        IntensityTemplate(3, 4,  (5, 1, 0)),
-        IntensityTemplate(3, 4,  (5, 0, 1)),
-        IntensityTemplate(3, 4,  (4, 1, 1)),
-        IntensityTemplate(3, 4,  (4, 2, 0)),
-        IntensityTemplate(3, 4,  (4, 1, 1)),
-        IntensityTemplate(3, 4,  (3, 2, 1)),
-    ],
+    [IntensityTemplate(1, 1, (2, 0, 0))]
 ]
 
 
