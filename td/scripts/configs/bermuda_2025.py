@@ -63,14 +63,54 @@ FlowTemplate = namedtuple('FlowTemplate', [
 ADD_COLOR_FADE = 'ADD_COLOR_FADE'
 ACTIVATE_TOP_CLIP_FILL_GAP = 'ACTIVATE_TOP_CLIP_FILL_GAP'
 REMOVE_COLOR_FADE = 'REMOVE_COLOR_FADE'
+ADD_TOP_CLIP = 'ADD_TOP_CLIP'
+ADD_MASK_CLIP_WITH_HEAT = 'ADD_MASK_CLIP_WITH_HEAT'
+ADD_TOP_AND_MASK_CLIP_WITH_HEAT = 'ADD_TOP_AND_MASK_CLIP_WITH_HEAT'
+ACTIVATE_TOP_CLIP_FILL_GAP_WITH_HEAT = 'ACTIVATE_TOP_CLIP_FILL_GAP_WITH_HEAT'
+ADD_MASK_CLIP = 'ADD_MASK_CLIP'
 
-template_flow_option = FlowTemplate(
+template_flow_option_0 = FlowTemplate(
+    initial_clips=[LAYER_BG1],
+    section_1_action=ADD_COLOR_FADE,
+    section_2_action=ADD_MASK_CLIP,
+    section_3_action=REMOVE_COLOR_FADE,
+)
+
+template_flow_option_1 = FlowTemplate(
+    initial_clips=[LAYER_BG1],
+    section_1_action=ADD_COLOR_FADE,
+    section_2_action=ADD_MASK_CLIP_WITH_HEAT,
+    section_3_action=REMOVE_COLOR_FADE,
+)
+
+template_flow_option_2 = FlowTemplate(
+    initial_clips=[LAYER_BG1],
+    section_1_action=ADD_COLOR_FADE,
+    section_2_action=ADD_TOP_AND_MASK_CLIP_WITH_HEAT,
+    section_3_action=REMOVE_COLOR_FADE,
+)
+
+template_flow_option_3 = FlowTemplate(
+    initial_clips=[LAYER_BG1, LAYER_MASK],
+    section_1_action=ADD_COLOR_FADE,
+    section_2_action=ACTIVATE_TOP_CLIP_FILL_GAP_WITH_HEAT,
+    section_3_action=REMOVE_COLOR_FADE,
+)
+
+template_flow_option_4 = FlowTemplate(
     initial_clips=[LAYER_BG1, LAYER_MASK],
     section_1_action=ADD_COLOR_FADE,
     section_2_action=ACTIVATE_TOP_CLIP_FILL_GAP,
     section_3_action=REMOVE_COLOR_FADE,
 )
 
+template_flow_options = [
+    template_flow_option_0,
+    template_flow_option_1,
+    template_flow_option_2,
+    template_flow_option_3,
+    template_flow_option_4,
+]
 
 # trasnsitions that are fun for the bg layer
 t = [1, 3, 8, 10, 12, 13, 15, 17, 18, 19, 21, 31, 39, 46, 48]
@@ -326,8 +366,9 @@ class ActiveStuff:
     # intensity template
     self.mb = mb
 
+    print("initializing sld_resolume_controller so template flow option is 0")
     # TODO make this dynamic, maybe by adding to intensity templates
-    self.template_flow_option = template_flow_option
+    self.template_flow_option = template_flow_options[0]
 
     # fx is a list of tuples (layer, effect_name) which correspond to the OSC
     # commands used to trigger those effects
@@ -352,7 +393,15 @@ class ActiveStuff:
   def load(self, mb):
     # print("sld_resolume_controller::load called with mb:", mb)
     self.mb = mb
-    self.template_flow_option = template_flow_option
+    # bias template flow option selection based on mb.intensity
+    # earlier options for low intensity, later options for high intensity
+    idx = int((get_intensity() / 19) * (len(template_flow_options) - 1))
+    # add some randomness around the biased index
+    choices = [max(0, idx - 1), idx, min(len(template_flow_options) - 1, idx + 1)]
+    choice = random.choice(choices)
+    print("using template flow template option:", choice, "of", len(template_flow_options))
+    self.template_flow_option = template_flow_options[choice]
+
 
   def choose_random_clips(self):
     clips = []
@@ -476,7 +525,7 @@ class ActiveStuff:
       print("done preparing and activating")
     elif self.section == 1:
       # add a variation
-      if template_flow_option.section_1_action == ADD_COLOR_FADE:
+      if self.template_flow_option.section_1_action == ADD_COLOR_FADE:
         print("sld_resolume_controller::increment_section: section 1 ADD_COLOR_FADE")
         self.fx.append((LAYER_BG1, "huerotate"))
         resolume_commands.activate_effect(LAYER_BG1, "huerotate")
@@ -496,7 +545,7 @@ class ActiveStuff:
         self.activate()
         return
 
-      if template_flow_option.section_2_action == ACTIVATE_TOP_CLIP_FILL_GAP:
+      if self.template_flow_option.section_2_action == ACTIVATE_TOP_CLIP_FILL_GAP:
         print("sld_resolume_controller::increment_section: section 2 ACTIVATE_TOP_CLIP_FILL_GAP")
         # print("sld_resolume_controller::section 2: activating top clip to fill gap")
         # activate a top clip to fill the gap
@@ -504,7 +553,7 @@ class ActiveStuff:
         self.clips.append((LAYER_TOP, chosen_clip))
         resolume_commands.activate_clip(LAYER_TOP, chosen_clip)
 
-      elif template_flow_option.section_2_action == 'DEPRECATED_SECTION_2_ACTION':
+      elif self.template_flow_option.section_2_action == 'DEPRECATED_SECTION_2_ACTION':
         print("sld_resolume_controller::increment_section: section 2 DEPRECATED_SECTION_2_ACTION")
         clips_intensity = get_clips_intensity(
             self.mb.active_layers, self.mb.clip_intensity)
@@ -518,8 +567,55 @@ class ActiveStuff:
         self.clips[0] = (LAYER_BG1, chosen_clip)
         resolume_commands.activate_clip(LAYER_BG1, chosen_clip)
 
+      elif self.template_flow_option.section_2_action == ADD_TOP_CLIP:
+        print("sld_resolume_controller::increment_section: section 2 ADD_TOP_CLIP")
+        # activate a top clip to fill the gap
+        chosen_clip = random.choice(top_clips)
+        self.clips.append((LAYER_TOP, chosen_clip))
+        resolume_commands.activate_clip(LAYER_TOP, chosen_clip)
+
+      elif self.template_flow_option.section_2_action == ADD_MASK_CLIP_WITH_HEAT:
+        print("sld_resolume_controller::increment_section: section 2 ADD_MASK_CLIP_WITH_HEAT")
+        # activate a mask clip with heat
+        chosen_clip = random.choice(mask_clips_by_intensity[self.mb.clip_intensity])
+        self.clips.append((LAYER_MASK, chosen_clip))
+        resolume_commands.activate_clip(LAYER_MASK, chosen_clip)
+
+        self.clips.append((LAYER_TOP, 1))  # black top clip
+        resolume_commands.activate_clip(LAYER_TOP, 1)  # black top clip
+
+        self.fx.append((LAYER_MASK, "heat"))
+        resolume_commands.activate_effect(LAYER_MASK, "heat")
+
+      elif self.template_flow_option.section_2_action == ADD_TOP_AND_MASK_CLIP_WITH_HEAT:
+        print("sld_resolume_controller::increment_section: section 2 ADD_TOP_AND_MASK_CLIP_WITH_HEAT")
+        # activate a top clip and a mask clip with heat
+        chosen_top_clip = random.choice(top_clips)
+        self.clips.append((LAYER_TOP, chosen_top_clip))
+        resolume_commands.activate_clip(LAYER_TOP, chosen_top_clip)
+
+        chosen_mask_clip = random.choice(mask_clips_by_intensity[self.mb.clip_intensity])
+        self.clips.append((LAYER_MASK, chosen_mask_clip))
+        resolume_commands.activate_clip(LAYER_MASK, chosen_mask_clip)
+        self.fx.append((LAYER_MASK, "heat"))
+        resolume_commands.activate_effect(LAYER_MASK, "heat")
+      elif self.template_flow_option.section_2_action == ACTIVATE_TOP_CLIP_FILL_GAP_WITH_HEAT:
+        print("sld_resolume_controller::increment_section: section 2 ACTIVATE_TOP_CLIP_FILL_GAP_WITH_HEAT")
+        # activate a top clip to fill the gap with heat
+        chosen_clip = random.choice(top_clips)
+        self.clips.append((LAYER_TOP, chosen_clip))
+        resolume_commands.activate_clip(LAYER_TOP, chosen_clip)
+        self.fx.append((LAYER_MASK, "heat"))
+        resolume_commands.activate_effect(LAYER_TOP, "heat")
+      elif self.template_flow_option.section_2_action == ADD_MASK_CLIP:
+        print("sld_resolume_controller::increment_section: section 2 ADD_MASK_CLIP")
+        # activate a mask clip
+        chosen_clip = random.choice(mask_clips_by_intensity[self.mb.clip_intensity])
+        self.clips.append((LAYER_MASK, chosen_clip))
+        resolume_commands.activate_clip(LAYER_MASK, chosen_clip)
+
     elif self.section == 3:
-      if template_flow_option.section_3_action == REMOVE_COLOR_FADE:
+      if self.template_flow_option.section_3_action == REMOVE_COLOR_FADE:
         print("sld_resolume_controller::increment_section: section 3 REMOVE_COLOR_FADE")
         resolume_commands.send("/composition/layers/1/video/effects/huerotate/effect/huerotate/behaviour/playdirection", 0)
     return
@@ -541,6 +637,7 @@ class ActiveStuff:
     for f in dashboard_effects:
       resolume_commands.deactivate_effect(f[1], f[2])
 
+    resolume_commands.deactivate_effect(LAYER_MASK, "heat")
     resolume_commands.deactivate_effect(LAYER_BG1, "huerotate")
     return
 
