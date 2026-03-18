@@ -80,11 +80,18 @@ def onTableChange(dat: DAT, prevDAT: DAT, info: ChangedDATInfo):
 	# Build all rows (original + rotated) into a list
 	rows = []
 	for row_idx in range(1, dat.numRows):
-		triangle_idx = int(dat[row_idx, 'triangle_idx'].val)
+		raw = dat[row_idx, 'triangle_idx'].val
+		if not raw or not raw.strip():
+			continue
+		try:
+			triangle_idx = int(raw)
+		except ValueError:
+			continue
+
 		cx = float(dat[row_idx, 'center.x'].val)
-		cy = float(dat[row_idx, 'center.y'].val)
+		cy = 1000 - float(dat[row_idx, 'center.y'].val)
 		crx = float(dat[row_idx, 'corner.x'].val)
-		cry = float(dat[row_idx, 'corner.y'].val)
+		cry = 1000 - float(dat[row_idx, 'corner.y'].val)
 
 		# Original row (rotation 0)
 		rows.append([triangle_idx, round(cx), round(cy), round(crx), round(cry)])

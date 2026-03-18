@@ -31,10 +31,10 @@ def generate_pixelmap(triangle):
             cy + dx * math.sin(rad) + dy * math.cos(rad),
         )
 
-    # Derive all three vertices from the given corner
+    # Derive all three vertices from the given corner (clockwise winding)
     v0 = (corner_x, corner_y)
-    v1 = rotate(corner_x, corner_y, 120)
-    v2 = rotate(corner_x, corner_y, 240)
+    v1 = rotate(corner_x, corner_y, -120)
+    v2 = rotate(corner_x, corner_y, -240)
 
     # Side a: v0 → v1, side b: v1 → v2, side c: v2 → v0
     sides = [
