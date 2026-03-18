@@ -116,7 +116,7 @@ template_flow_options = [
 t = [1, 3, 8, 10, 12, 13, 15, 17, 18, 19, 21, 31, 39, 46, 48]
 
 # these numbers match up with "spiral v18" in the resolume composition
-v = [0, 35, 66, 84]
+v = [0, 22, 29, 33]
 bg_clips_by_intensity = [
     range(v[0]+1, v[1]),
     range(v[0]+1, v[2]),
@@ -127,7 +127,7 @@ bg_clips_by_intensity = [
 
 # these numbers match up with "breath potter" in the resolume composition
 
-m = [0, 16, 27, 35]
+m = [0, 16, 27, 34]
 mask_clips_by_intensity = [
     range(m[0]+1, m[1]),
     range(m[0]+1, m[2]),
@@ -414,7 +414,7 @@ class ActiveStuff:
       chosen_clip = random.choice(bg_clips_by_intensity[clip_intensity])
       clips.append((LAYER_BG1, chosen_clip))
     if LAYER_MASK in initial_clips:
-      chosen_clip = random.choice(mask_clips_by_intensity[clip_intensity])
+      chosen_clip = 0
       clips.append((LAYER_MASK, chosen_clip))
     if LAYER_TOP in initial_clips:
       chosen_clip = random.choice(top_clips)
@@ -536,7 +536,7 @@ class ActiveStuff:
 
     elif self.section == 2:
 
-      # TODO could delete this block maybe
+      # TODO could delete this block maybeEQ
       # update bg clip
       if len(self.clips) < 1:
         print(
@@ -613,6 +613,9 @@ class ActiveStuff:
         chosen_clip = random.choice(mask_clips_by_intensity[self.mb.clip_intensity])
         self.clips.append((LAYER_MASK, chosen_clip))
         resolume_commands.activate_clip(LAYER_MASK, chosen_clip)
+
+        self.clips.append((LAYER_TOP, 1))  # black top clip
+        resolume_commands.activate_clip(LAYER_TOP, 1)  # black top clip
 
     elif self.section == 3:
       if self.template_flow_option.section_3_action == REMOVE_COLOR_FADE:
