@@ -142,7 +142,7 @@ def generate_routing_table(source=triangle_map, routingtable=None, universes_per
     routingtable.clear()
     routingtable.appendRow(["channel", "net", "subnet", "universe"])
 
-    global_universe = 0
+    global_universe = 1
     for tri_idx in triangle_indices:
         for local_uni in range(universes_per_triangle):
             routingtable.appendRow([

@@ -30,7 +30,7 @@ Return
 
 ; load touchdesigner
 #8::
-Run %A_ProgramFiles%\Derivative\TouchDesigner.2023.11510\bin\TouchDesigner.exe "E:\git\lightdream-scripts\td\Bermuda.toe"
+Run %A_ProgramFiles%\Derivative\TouchDesigner.2023.11510\bin\TouchDesigner.exe "E:\git\bermuda\td\Bermuda.toe"
 SetTitleMatchMode 2
 WinWait Bermuda, , 120
 if ErrorLevel
@@ -58,7 +58,7 @@ SetTitleMatchMode 2
 WinWait Beat Link Show, , 15
 if ErrorLevel
 {
-    MsgBox, "The show doesn't seem to be open. In the following dialog, please navigate to C:/artsync/lightdream-scripts/bermuda-show.bls and open it."
+    MsgBox, "The show doesn't seem to be open. In the following dialog, please navigate to C:/artsync/bermuda/bermuda-show.bls and open it."
     WinWaitActive, Beat Link Triggers
     Send, ^o
     return
@@ -67,7 +67,7 @@ Return
 
 ;
 
-; Navigate the file open dialog and open C:/artsync/lightdream-scripts/bermuda-show.bls
+; Navigate the file open dialog and open C:/artsync/bermuda/bermuda-show.bls
 
 
 ; WinActivate, rekordbox

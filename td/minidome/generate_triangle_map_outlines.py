@@ -54,7 +54,7 @@ def rotate_point(x: float, y: float, angle: float) -> Tuple[float, float]:
 
 NUM_OUTLINES = 5
 OUTLINE_DISTANCES = [1.0, 0.8, 0.6, 0.4, 0.2]  # fraction of center-to-corner distance
-OUTLINE_LENGTHS = [16, 13, 10, 6, 3]
+OUTLINE_PREFIXES = ['a', 'b', 'c', 'd', 'e']
 
 
 def onTableChange(dat: DAT, prevDAT: DAT, info: ChangedDATInfo):
@@ -74,6 +74,7 @@ def onTableChange(dat: DAT, prevDAT: DAT, info: ChangedDATInfo):
 	"""
 	print("table changed")
 	output = op('triangle_map_table')
+	lengths_table = op('map_triangle_segment_lengths')
 
 	num_source_rows = dat.numRows - 1
 	if num_source_rows <= 0:
@@ -92,9 +93,21 @@ def onTableChange(dat: DAT, prevDAT: DAT, info: ChangedDATInfo):
 		crx = float(dat[row_idx, 'corner.x'].val)
 		cry = float(dat[row_idx, 'corner.y'].val)
 
+		# Find this triangle's row in the segment lengths table
+		tri_row = None
+		for r in range(1, lengths_table.numRows):
+			if int(lengths_table[r, 'triangle_idx']) == triangle_idx:
+				tri_row = r
+				break
+
 		for outline_idx in range(NUM_OUTLINES):
 			pct = OUTLINE_DISTANCES[outline_idx]
-			length = OUTLINE_LENGTHS[outline_idx]
+
+			# Read per-side lengths from the segment lengths table
+			prefix = OUTLINE_PREFIXES[outline_idx]
+			len_a = int(lengths_table[tri_row, f'outline_{prefix}0'])
+			len_b = int(lengths_table[tri_row, f'outline_{prefix}1'])
+			len_c = int(lengths_table[tri_row, f'outline_{prefix}2'])
 
 			# Scale corner toward center by the distance percentage
 			adj_crx = cx + (crx - cx) * pct
@@ -102,7 +115,7 @@ def onTableChange(dat: DAT, prevDAT: DAT, info: ChangedDATInfo):
 
 			output.appendRow([
 				triangle_idx, cx, cy, adj_crx, adj_cry,
-				outline_idx, length, length, length
+				outline_idx, len_a, len_b, len_c
 			])
 
 	return
