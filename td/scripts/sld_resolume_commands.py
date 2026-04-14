@@ -67,11 +67,14 @@ def update_tempo(bpm):
 
 def update_bpm(bpm):
   # print("sld_resolume_commands::updating bpm:", bpm)
+  print("MLS: sld_resolume_commands::updating bpm:",
+        bpm, tdu.remap(bpm, 20, 500, 0, 1))
   send('/composition/tempocontroller/tempo', tdu.remap(bpm, 20, 500, 0, 1))
   return
 
 
 def resync():
+  print("MLS: resync!!")
   send('/composition/tempocontroller/resync', 1)
   send('/composition/tempocontroller/resync', 0)
   return

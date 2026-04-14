@@ -9,14 +9,19 @@
 # Make sure the corresponding toggle is enabled in the DAT Execute DAT.
 #
 # If rows or columns are deleted, sizeChange will be called instead of row/col/cellChange.
+
 import random
+
+# If True, always play tracks in order (never random)
+force_ordered = True
 
 current_idx = 1
 def onTableChange(dat):
+
   global is_ordered, current_idx
   # print("playlist_music_exec::table has changed.")
-  if (str(dat[1,0]).startswith("01 ")):
-    print("playlist_music_exec::ordered playlist")
+  if force_ordered or str(dat[1,0]).startswith("01 "):
+    print("playlist_music_exec::ordered playlist (forced)" if force_ordered else "playlist_music_exec::ordered playlist")
     current_idx = 1
     pickFirstTrack()
   else:
@@ -50,30 +55,29 @@ def pickFirstTrack():
   return
 
 def pickNextTrack():
-  # read current value
-  current_track = int(str(
-      op('/project1/ui_container/playlist_manager/playlist_container/selected_music')[1, 0])[:2])
+  current_name = str(op('/project1/ui_container/playlist_manager/playlist_container/selected_music')[1, 0])
+  musics = op('playlist_folder_musics')
+  rows = musics.numRows
 
-  rows = op('playlist_folder_musics').numRows
-  if rows <= current_track:
-    # @TODO better test the last tracks
-    print("pickNextTrack: rows <= current_track so im setting current_track to 1.")
-    current_track = 1
-    return
+  # find current track by exact name match (skip header row 0)
+  current_row = None
+  for i in range(1, rows):
+    if str(musics[i, 0]) == current_name:
+      current_row = i
+      break
 
-  op('music_dropdown').par.Value0 = current_track
+  if current_row is None:
+    print("pickNextTrack: could not find current track '{}', starting from first.".format(current_name))
+    next_row = 1
+  else:
+    next_row = current_row + 1
+    if next_row >= rows:
+      print("pickNextTrack: reached end of playlist, wrapping to first track.")
+      next_row = 1
 
-  # global current_idx
-  # print("playlist_music_exec::pickRandomTrack, current index:", current_idx)
-
-
-  # current_idx += 1
-  # if current_idx >= rows:
-  #   current_idx = 1
-
-  # chosen_value = op('playlist_folder_musics')[current_idx, 0]
-  # op('music_dropdown').par.Value0 = chosen_value
-  # print("playlist_music_exec::pickRandomTrack dropdown value is now:", chosen_value)
+  next_value = musics[next_row, 0]
+  print("pickNextTrack: playing row {} '{}'".format(next_row, next_value))
+  op('music_dropdown').par.Value0 = next_value
   return
 
 def pickRandomTrack():
@@ -98,7 +102,7 @@ def next_track():
   op("/project1/ui_container/resolume_container/section_timer").par.initialize.pulse()
   # print("next_track called...")
   # TODO do I need to confirm toggles?
-  if (str(op('playlist_folder_musics')[1, 0])).startswith("01 "):
+  if force_ordered or str(op('playlist_folder_musics')[1, 0]).startswith("01 "):
     pickNextTrack()
   else:
     print("picking random track...")

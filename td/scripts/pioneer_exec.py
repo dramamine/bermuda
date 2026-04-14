@@ -71,7 +71,7 @@ def sync():
     print("done syncing from phrase change")
 
 
-def onCellChange(dat, cells, prev):
+def onCellChange(dat, cells, prev, sync_bpm=True):
   global mood, phrase, section
 
   # do any cells have '1' or '2' in them?
@@ -94,7 +94,8 @@ def onCellChange(dat, cells, prev):
         mod("/project1/ui_container/resolume_container/sld_resolume_controller").choose_intensity(next_intensity)
         next_transition_time = 0 if next_phrase == 'chorus' else 2
         mod("/project1/ui_container/resolume_container/sld_resolume_controller").load_pattern_and_play(next_transition_time)
-        sync()
+        if sync_bpm:
+          sync()
       elif next_phrase in ['up']:
         current_intensity = mod("/project1/ui_container/resolume_container/sld_resolume_controller").get_intensity()
         print("on up: going to add 2 to intensity:", current_intensity)

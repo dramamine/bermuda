@@ -67,28 +67,28 @@ effects = [
     (0, LAYER_BG1, "vignette", True),
     (0, LAYER_BG1, "blow", True),
     (0, LAYER_BG1, "edgedetection"),
-    (0, LAYER_BG1, "ezradialcloner"),
-    (0, LAYER_BG1, "ezradialcloner2"),
+    # (0, LAYER_BG1, "ezradialcloner"),
+    # (0, LAYER_BG1, "ezradialcloner2"),
     (0, LAYER_BG1, "goo"),
     (0, LAYER_BG1, "gridcloner"),
     (0, LAYER_BG1, "heat", True),
     (0, LAYER_BG1, "heat2", True),
     (0, LAYER_BG1, "infinitezoom"),
     (0, LAYER_BG1, "infinitezoom2", True),
-    (0, LAYER_BG1, "kaleidoscope"),
-    (0, LAYER_BG1, "kaleidoscope2"),
-    (0, LAYER_BG1, "kaleidoscope3"),
+    # (0, LAYER_BG1, "kaleidoscope"),
+    # (0, LAYER_BG1, "kaleidoscope2"),
+    # (0, LAYER_BG1, "kaleidoscope3"),
     (0, LAYER_BG1, "linearcloner"),
     (0, LAYER_BG1, "metashape"),
     (0, LAYER_BG1, "mirror"),
     (0, LAYER_BG1, "pointgrid"),
-    (0, LAYER_BG1, "polarkaleido"),
-    (0, LAYER_BG1, "polarkaleido2"),
-    (0, LAYER_BG1, "polarkaleido3"),
-    (0, LAYER_BG1, "polarkaleido4"),
-    (0, LAYER_BG1, "polarkaleido5"),
+    # (0, LAYER_BG1, "polarkaleido"),
+    # (0, LAYER_BG1, "polarkaleido2"),
+    # (0, LAYER_BG1, "polarkaleido3"),
+    # (0, LAYER_BG1, "polarkaleido4"),
+    # (0, LAYER_BG1, "polarkaleido5"),
     (0, LAYER_BG1, "colormorph"),
-    (0, LAYER_BG1, "greenhousevideo"),
+    # (0, LAYER_BG1, "greenhousevideo"),
 ]
 
 dashboard_effects = [
@@ -103,11 +103,11 @@ dashboard_effects = [
 ]
 
 
-# get the effects above where the intensity is 0
+# SHORTCUT: just use one intensity of effects
 effects_by_intensity = [
     [e for e in effects if e[0] == 0],
-    [e for e in effects if e[0] == 1],
-    [e for e in effects if e[0] == 2],
+    [e for e in effects if e[0] == 0],
+    [e for e in effects if e[0] == 0],
 ]
 
 

@@ -85,6 +85,7 @@ def do_current_action():
 	global current_event_ts
 	csv_rows = get_csv_rows()
 	found_match = False
+
 	for row in csv_rows:
 		event_ts = row[0] if len(row) > 0 else ''
 		if (current_event_ts != event_ts):
@@ -96,6 +97,7 @@ def do_current_action():
 		value2 = row[3] if len(row) > 3 else ''
 		value3 = row[4] if len(row) > 4 else ''
 
+		print(f"selected_csv_exec::TRIGGERED EVENT ts={event_ts} action={current_action} v1={value1} v2={value2} v3={value3}")
 		print("selected_csv_exec:current action:", current_action, value1, value2, value3)
 
 		if current_action == "set_intensity":
@@ -103,7 +105,7 @@ def do_current_action():
 			mod("/project1/ui_container/resolume_container/sld_resolume_controller").load_pattern_and_play()
 		elif current_action == "set_bpm":
 			op("/project1/ui_container/resolume_container/bpm").par.Value0 = float(value1)
-			mod("/project1/ui_container/resolume_container/sld_resolume_controller").on_bpm_change(float(value1), False)
+			mod("/project1/ui_container/resolume_container/sld_resolume_controller").on_bpm_change(float(value1), restart_section=False, resync=True)
 		elif current_action == "update_section":
 			intensity = safe_cast(value1, int, None)
 			transition_style = safe_cast(value2, str, '')
@@ -131,7 +133,8 @@ def do_current_action():
 		elif current_action == "end":
 			mod("/project1/ui_container/playlist_manager/playlist_container/playlist_music_exec").next_track()
 		elif current_action == "phrase_change":
-			mod("/project1/ui_container/pioneer_link/pioneer_exec").onCellChange(op('pioneer_data'), [value1], [])
+			mod("/project1/ui_container/pioneer_link/pioneer_exec").onCellChange(op('pioneer_data'), [value1], [], sync_bpm=False)
+			mod("/project1/ui_container/resolume_container/sld_resolume_commands").resync()
 
 	if not found_match:
 		print("selected_csv_exec::do_current_action WARNING: no matching event for ts", current_event_ts)
