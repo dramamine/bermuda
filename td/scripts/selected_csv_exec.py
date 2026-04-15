@@ -10,7 +10,12 @@
 #
 # If rows or columns are deleted, sizeChange will be called instead of row/col/cellChange.
 import re
+import time
 current_event_ts = '0.000'
+
+# If True, start/stop Resolume's video recorder with each song
+use_video_recorder = True
+
 
 def onRowChange(dat, rows):
 	# print("selected_csv_exec::row has changed.", rows)
@@ -46,18 +51,23 @@ def onRowChange(dat, rows):
 	return
 
 def load_current_song():
+	print("selected_csv_exec::reset_timecode: load current song called")
 	onRowChange(op('selected_music'), None)
 	return
 
 
 def play_song():
+	print("selected_csv_exec::play_song: starting song, setting up first timer event")
 	op('/project1/ui_container/playlist_container/audio_analysis_and_player/timecode1').par.init.pulse()
 	op('/project1/ui_container/playlist_container/audio_analysis_and_player/timecode1').par.start.pulse()
+	if use_video_recorder:
+		mod("/project1/ui_container/resolume_container/sld_resolume_commands").record(True)
 	load_next_timer(use_zero=True)
 	pass
 
 
 def reset_timecode():
+	print("selected_csv_exec::reset_timecode: resetting timecode and stopping timer")
 	op('/project1/ui_container/playlist_container/audio_analysis_and_player/timecode1').par.init.pulse()
 	op('timer1').par.initialize.pulse()
 	return
@@ -83,6 +93,22 @@ def get_csv_rows():
 
 def do_current_action():
 	global current_event_ts
+
+	if current_event_ts == '__recording_end__':
+		print("selected_csv_exec::do_current_action: recording end, stopping recorder, waiting 30s before next track")
+		if use_video_recorder:
+			mod("/project1/ui_container/resolume_container/sld_resolume_commands").record(False)
+		current_event_ts = '__song_end__'
+		op('timer1').par.length = 30
+		op('timer1').par.initialize.pulse()
+		op('timer1').par.start.pulse()
+		return
+
+	if current_event_ts == '__song_end__':
+		print("selected_csv_exec::do_current_action: song ended, advancing to next track")
+		mod("/project1/ui_container/playlist_manager/playlist_container/playlist_music_exec").next_track()
+		return
+
 	csv_rows = get_csv_rows()
 	found_match = False
 
@@ -97,7 +123,7 @@ def do_current_action():
 		value2 = row[3] if len(row) > 3 else ''
 		value3 = row[4] if len(row) > 4 else ''
 
-		print(f"selected_csv_exec::TRIGGERED EVENT ts={event_ts} action={current_action} v1={value1} v2={value2} v3={value3}")
+		# print(f"selected_csv_exec::TRIGGERED EVENT ts={event_ts} action={current_action} v1={value1} v2={value2} v3={value3}")
 		print("selected_csv_exec:current action:", current_action, value1, value2, value3)
 
 		if current_action == "set_intensity":
@@ -163,5 +189,15 @@ def load_next_timer(use_zero=False):
 			found_next = True
 			break
 	if not found_next:
-		print("selected_csv_exec::load_next_timer WARNING: no upcoming events after ts", ts)
+		info = op('/project1/ui_container/playlist_container/audio_analysis_and_player/audiofilein1_info')
+		file_length_s = float(info['file_length_frames']) / 60
+		remaining = file_length_s - ts
+		if remaining > 0.1:
+			current_event_ts = '__recording_end__'
+			op('timer1').par.length = remaining
+			op('timer1').par.initialize.pulse()
+			op('timer1').par.start.pulse()
+			print("selected_csv_exec::load_next_timer: no more events, song-end timer set for {:.2f}s".format(remaining))
+		else:
+			print("selected_csv_exec::load_next_timer WARNING: no upcoming events after ts", ts)
 	return

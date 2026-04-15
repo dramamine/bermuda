@@ -255,7 +255,7 @@ class ActiveStuff:
   def __init__(self, mb):
     self.mb = mb
 
-    print("initializing sld_resolume_controller so template flow option is 0")
+    # print("initializing sld_resolume_controller so template flow option is 0")
     self.template_flow_option = template_flow_options[0]
 
     # fx is a list of tuples (layer, effect_name) which correspond to the OSC
@@ -281,7 +281,7 @@ class ActiveStuff:
     idx = int((get_intensity() / 19) * (len(template_flow_options) - 1))
     choices = [max(0, idx - 1), idx, min(len(template_flow_options) - 1, idx + 1)]
     choice = random.choice(choices)
-    print("using template flow template option:", choice, "of", len(template_flow_options))
+    # print("using template flow template option:", choice, "of", len(template_flow_options))
     self.template_flow_option = template_flow_options[choice]
 
   def choose_random_clips(self):
@@ -299,16 +299,18 @@ class ActiveStuff:
 
   def stringify_my_choices(self, mb, clips, fx):
     global effects_state
-    mb_string = "layers: {}, effect_count_by_intensity: {}".format(
+    mb_string = "DIECAST: layers: {}, effects: {}-{}-{}".format(
         mb.active_layers,
-        mb.effect_count_by_intensity,
+        mb.effect_count_by_intensity[0],
+        mb.effect_count_by_intensity[1],
+        mb.effect_count_by_intensity[2],
     )
-    clips_string = "  CLIPS:" + \
-        ", ".join(["({} L{})".format(c[1], c[0]) for c in clips])
-    fx_string = "  FX:" + ", ".join(["({}{} i{} L{})".format(
-        f[2], "-aur" if (len(f) >= 4 and f[3]) else "", f[0], f[1]) for f in fx])
+    clips_string = "CLIPS:" + \
+        ", ".join(["({})".format(c[1]) for c in clips])
+    fx_string = "  FX:" + ", ".join(["({}{} i{})".format(
+        f[2], "-aur" if (len(f) >= 4 and f[3]) else "", f[0]) for f in fx])
 
-    effects_state = "\n".join([mb_string, clips_string, fx_string])
+    effects_state = " ".join([mb_string, clips_string, fx_string])
     return effects_state
 
   def _pick_effects(self):
@@ -326,7 +328,7 @@ class ActiveStuff:
     if (not has_reactive_effect) and int(op('intensity_chop').rows()[0][0].val) >= 5:
       dashboard_effect = random.choice(dashboard_effects)
       fx.append(dashboard_effect)
-      print("forcing use of dashboard effect")
+      # print("forcing use of dashboard effect")
     self.fx = fx
     return
 
@@ -381,10 +383,10 @@ class ActiveStuff:
     op('section').par.Value0 = self.section
 
     if self.section == 0:
-      print("sld_resolume_controller::increment_section: section 0 prepare and activate")
+      # print("sld_resolume_controller::increment_section: section 0 prepare and activate")
       self.prepare()
       self.activate()
-      print("done preparing and activating")
+      # print("done preparing and activating")
     elif self.section == 1:
       if self.template_flow_option.section_1_action == ADD_COLOR_FADE:
         print("sld_resolume_controller::increment_section: section 1 ADD_COLOR_FADE")
@@ -441,7 +443,7 @@ ast = ActiveStuff(IntensityTemplate(2, (1, 0, 0)))
 
 def load_pattern_and_play(transition_time=2):
   i = int(op('intensity_chop').rows()[0][0].val)
-  print("sld_resolume_controller::load_pattern_and_play with intensity: ", i)
+  # print("sld_resolume_controller::load_pattern_and_play with intensity: ", i)
 
   # pick a template
   ast.load(random.choice(intensity_templates[i]))
@@ -453,7 +455,7 @@ def load_pattern_and_play(transition_time=2):
 
 def full_reset(deactivate_all=False):
   global ast
-  print("sld_resolume_controller::full_reset called.")
+  # print("sld_resolume_controller::full_reset called.")
   if deactivate_all:
     ast.deactivate_all_fx()
   else:
@@ -472,14 +474,14 @@ def fadeout(transition_time):
 
 
 def on_bpm_change(bpm, restart_section=True, resync=False):
-  print("resolume_controller::update_bpm called", restart_section, bpm)
+  # print("resolume_controller::update_bpm called", restart_section, bpm)
 
   resolume_commands.update_bpm(bpm)
   if resync:
     resolume_commands.resync()
 
   if restart_section:
-    print("bpm change load pattern and play")
+    # print("bpm change load pattern and play")
     load_pattern_and_play()
 
   return
