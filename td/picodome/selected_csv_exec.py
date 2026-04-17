@@ -24,6 +24,9 @@ def onRowChange(dat, rows):
 		mp3_path
 	)
 
+	mp4_path = re.sub(r'\.(mp3|m4a)$', '.mp4', mp3_path)
+	op('moviefilein1').par.file = mp4_path
+
 	op('audiofilein1').par.file = mp3_path
 	play_song()
 	return

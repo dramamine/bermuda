@@ -50,7 +50,7 @@ template_flow_options = [
 ]
 
 # trasnsitions that are fun for the bg layer
-t = [1, 3, 8, 10, 12, 13, 15, 17, 18, 19, 21, 31, 39, 46, 48]
+t = [1, 3, 8, 10, 12, 13, 15, 17, 18, 19, 21, 31, 39, 46, 49]
 
 # these numbers match up with clips in the resolume composition
 bg_clips = range(1, 35)
