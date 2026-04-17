@@ -4,6 +4,57 @@ import math
 triangle_map = op("triangle_map_table")
 replicator = op("replicator1")
 
+# --- Test pattern mode ---
+# When True, generate_panel_map() writes color-chart u,v coords instead of
+# world-space coords. test_source_switch should also be set to input 1.
+test_mode = False
+
+_TEST_SLOTS = 4
+_TEST_IMAGE_WIDTH = 1000
+_TEST_IMAGE_V = 1000  # vertical center of the test image
+
+
+def _test_color_slot(idx, length):
+    """Return color slot 0-3 for pixel at position idx in a segment of given length.
+
+    Slot 0=green, 1=yellow, 2=red, 3=black.
+    Mirrors from both ends: first and last pixel are green, next inner pair yellow, etc.
+    """
+    pos = min(idx, length - 1 - idx)
+    return min(pos, 3)
+
+
+def _test_uv(slot):
+    """Return (u, v) at the center of the given color band in the test image."""
+    band_width = _TEST_IMAGE_WIDTH / _TEST_SLOTS
+    return (band_width * slot + band_width / 2, _TEST_IMAGE_V)
+
+
+def generate_test_pixelmap(triangle):
+    """Return (u, v) tuples using color-chart coords for every pixel in the triangle.
+
+    Iterates sides a, b, c exactly like generate_pixelmap() but maps each pixel
+    to a color band based on its position within the segment.
+    """
+    sides = [
+        triangle["lengths"]["a"],
+        triangle["lengths"]["b"],
+        triangle["lengths"]["c"],
+    ]
+    pixels = []
+    for length in sides:
+        for i in range(length):
+            pixels.append(_test_uv(_test_color_slot(i, length)))
+    return pixels
+
+
+def set_test_mode(enabled):
+    """Enable or disable test pattern mode and regenerate the pixel map."""
+    global test_mode
+    test_mode = bool(enabled)
+    # op("test_source_switch").par.index = 1 if test_mode else 0
+    generate_panel_map()
+
 
 def generate_pixelmap(triangle):
     """Generate pixel coordinates along the edges of a triangle.
@@ -108,7 +159,7 @@ def generate_panel_map(source=triangle_map):
             table.clear()
             table.appendRow(["index", "u", "v"])
 
-        pixels = generate_pixelmap(triangle)
+        pixels = generate_test_pixelmap(triangle) if test_mode else generate_pixelmap(triangle)
         for x, y in pixels:
             table.appendRow([panel_indices[tri_idx], x, y])
             allpoints.appendRow([x / 1000, y / 1000, 0])
