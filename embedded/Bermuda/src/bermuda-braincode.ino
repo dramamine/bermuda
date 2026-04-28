@@ -59,7 +59,7 @@ using namespace qindesign::network;
 // i.e. how many strips; Octo board supports 8 channels out
 #define LED_HEIGHT 8
 
-#define version "2026.03"
+#define version "2026.04"
 
 // make sure the config above is correct for your setup. we expect the controlling
 // software  to send (LED_HEIGHT * universesPerStrip) universes to this IP.
@@ -74,12 +74,7 @@ bool showFps = true;
 bool showTiming = false;
 
 // @TODO maybe only enable this for the orange/purple brains?
-bool serialVisualizerEnabled = true;
-
-// Use the strip identifier pattern instead of the default ripple pattern.
-// Each strip gets a unique color + black-gap spacing.
-// Useful to identifying which cables go to which strip.
-bool useIdentifierPattern = false;
+bool serialVisualizerEnabled = false;
 
 // ~~ end config ~~
 
@@ -290,25 +285,34 @@ namespace Pattern {
     }
   }
 
-  void _rippleLayers() {
-    uint16_t i = 0;
+  void _rippleIdentifyLayers() {
+    uint16_t position = 0;
     for (int layer=0; layer<layers; layer++) {
       long color = _getLayerColor(layer);
-      for (uint8_t j=0; j < ledsPerLayer[layer]; j++) {
-        for (int k=0; k<LED_HEIGHT; k++) {
-          leds.setPixelColor(i+LED_WIDTH*k, color);
+
+      for (uint8_t j = 0; j < ledsPerLayer[layer]; j++) {
+        for (int strip = 0; strip < LED_HEIGHT; strip++) {
+          int period = (strip + 1) + 1; // (strip+1) colored pixels, then 1 black pixel
+          if ((position % period) < (strip + 1)) {
+            leds.setPixelColor(position + LED_WIDTH * strip, color);
+          } else {
+            leds.setPixelColor(position + LED_WIDTH * strip, 0);
+          }
         }
-        i++;
+        position++;
       }
-      for (uint8_t j=0; j < blanksPerLayer[layer]; j++) {
-        // always black, so don't need to set color
-        i++;
+
+      for (uint8_t j = 0; j < blanksPerLayer[layer]; j++) {
+        for (int strip = 0; strip < LED_HEIGHT; strip++) {
+          leds.setPixelColor(position + LED_WIDTH * strip, 0);
+        }
+        position++;
       }
-      // Serial.printf("after layer, i was: %d\n", i);
     }
 
     leds.show();
   }
+
   int _countPreviousLeds(int layer) {
     int total = 0;
     for (int i=layer-1; i>= 0; i--) {
@@ -356,34 +360,14 @@ namespace Pattern {
     leds.show();
   }
 
-  void _identifier() {
-    static uint8_t hue = 0;
-    for (int i = 0; i < LED_HEIGHT; i++) {
-      for (int j = 0; j < LED_WIDTH; j++) {
-        if ((j % (i + 2)) > 0) {
-          leds.setPixelColor(j + i * LED_WIDTH, getLedColorHSV(hue + i * 30, 255, BRIGHTNESS));
-        } else {
-          leds.setPixelColor(j + i * LED_WIDTH, 0);
-        }
-      }
-    }
-    hue += 3;
-    leds.show();
-    delay(100);
-  }
-
   void loop()
   {
-    if (useIdentifierPattern) {
-      _identifier();
-    } else {
-      _rippleLayers();
-    }
+    _rippleIdentifyLayers();
     ticks++;
   }
 
   void intro() {
-    _rippleLayers();
+    _rippleIdentifyLayers();
   }
 }
 
@@ -420,13 +404,6 @@ namespace Networking {
 
   // frame time in ms, using millis()
   uint32_t _frameMs = 0;
-
-  void logMacAddress() {
-    uint8_t mac[6];
-    Ethernet.macAddress(mac);
-    Serial.printf("INFO:   Hardware MAC: %02X:%02X:%02X:%02X:%02X:%02X\n",
-                  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-  }
 
   void networkChanged(bool hasIP, bool linkState) {
     if (!hasIP || !linkState) {
@@ -601,7 +578,6 @@ namespace Networking {
   void setup()
   {
     artnet.setReceiveQueueCapacity(artnetReceiveQueueCapacity);
-    Networking::logMacAddress();
     Networking::updateIp();
     Serial.printf("INFO:   ArtNet UDP queue capacity: %u packets\n",
                   static_cast<unsigned>(artnet.receiveQueueCapacity()));
