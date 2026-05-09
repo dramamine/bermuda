@@ -52,32 +52,24 @@ def rotate_point(x: float, y: float, angle: float) -> Tuple[float, float]:
 	return (x_rot, y_rot)
 
 
-def onTableChange(dat: DAT, prevDAT: DAT, info: ChangedDATInfo):
-	"""
-	Called when a table change occurs. For each source row, generates four
-	additional rows rotated by 72, 144, 216, and 288 degrees around
-	(CENTER_ORIGIN, CENTER_ORIGIN).
+def rebuild_table():
+	"""Rebuild triangle_map_table2 from the given source DAT.
+
+	For each source row, generates four additional rows rotated by 72, 144, 216,
+	and 288 degrees around (CENTER_ORIGIN, CENTER_ORIGIN).
 
 	Expects columns: triangle_idx, center.x, center.y, corner.x, corner.y
-
-	Args:
-		dat: The changed DAT
-		prevDAT: The DAT containing previous contents
-		info: ChangedDATInfo object with specific details on what changed
 	"""
-	print("table changed")
-	output = op('triangle_map_table2')  # the DAT this script is attached to
+	dat = op("table1")
+	output = op('triangle_map_table2')
 
-	# Read all source rows (skip header row at index 0)
 	num_source_rows = dat.numRows - 1
 	if num_source_rows <= 0:
 		return
 
-	# Start with a copy of the header
 	output.clear()
 	output.appendRow([dat[0, c].val for c in range(dat.numCols)])
 
-	# Build all rows (original + rotated) into a list
 	rows = []
 	for row_idx in range(1, dat.numRows):
 		raw = dat[row_idx, 'triangle_idx'].val
@@ -104,11 +96,15 @@ def onTableChange(dat: DAT, prevDAT: DAT, info: ChangedDATInfo):
 			new_idx = triangle_idx + num_source_rows * i
 			rows.append([new_idx, round(new_cx), round(new_cy), round(new_crx), round(new_cry)])
 
-	# Sort by triangle_idx and write to output
 	rows.sort(key=lambda r: r[0])
 	for row in rows:
 		output.appendRow(row)
 
+
+def onTableChange(dat: DAT, prevDAT: DAT, info: ChangedDATInfo):
+	"""Called when the source table changes. Rebuilds triangle_map_table2."""
+	print("table changed")
+	rebuild_table()
 	return
 
 # The following legacy callbacks can be used to track individual changes.

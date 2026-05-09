@@ -1,0 +1,384 @@
+// E131.ino - sACN/E1.31 Receiver for Teensy 4.1
+//
+// Receives sACN (E1.31) multicast UDP data and outputs to LEDs via
+// OctoWS2811 on the Teensy 4.1 with QNEthernet.
+//
+// Each OctoWS2811 output carries 2 universes (340 pixels). Currently
+// configured for 4 universes on 2 outputs. To scale up, change
+// UNIVERSE_COUNT to 16 to use all 8 outputs.
+//
+// Static IP is resolved from MAC address using a lookup table,
+// so the same sketch can be flashed to multiple Teensys.
+
+// C++ includes
+#include <cstdio>
+
+#include <QNEthernet.h>
+#include <OctoWS2811.h>
+
+using namespace qindesign::network;
+
+// -------------------------------------------------------------------
+//  Configuration
+// -------------------------------------------------------------------
+
+// sACN / E1.31
+constexpr uint16_t sacnPort         = 5568;
+constexpr uint16_t maxAssignedUniverses = 10;  // isTop uses 10 active universes, others use up to 8
+constexpr uint16_t channelsPerUni    = 510;    // Max DMX channels per universe
+constexpr bool logIncomingPackets    = true;   // Log universe and packet lengths
+constexpr uint16_t logEveryNPackets  = 100;    // Per-universe logging interval
+
+// LED layout
+constexpr uint16_t ledsPerUniverse   = 170;
+constexpr uint16_t universesPerStrip = 2;
+constexpr uint16_t pixelsPerStrip    = ledsPerUniverse * universesPerStrip; // 340
+constexpr uint8_t  numStrips         = 8;      // OctoWS2811 always drives 8
+
+// OctoWS2811 pixel format — change for your LED type
+// Common: WS2811_GRB for WS2812B, WS2811_RGB for WS2811
+constexpr int ledConfig = WS2811_RGB | WS2811_800kHz;
+
+// -------------------------------------------------------------------
+//  MAC → IP Mapping
+//
+//  Each Teensy 4.1 has a unique hardware MAC address. We use the
+//  last byte (mac[5]) to look up a static IP in the 169.254.18.0/24
+//  subnet. Update this table with your Teensys' MAC last bytes.
+//
+//  To find a Teensy's MAC, flash this sketch with Serial connected —
+//  it prints the MAC at startup.
+// -------------------------------------------------------------------
+
+struct NodeAssignment {
+  uint8_t macLastByte;
+  uint8_t ipLastByte;
+  uint16_t universeStart;
+  uint16_t universeEnd;
+};
+
+constexpr NodeAssignment macToIpTable[] = {
+  {0xDA, 31, 1, 40},    // red "top"
+  {0x1B, 32, 1, 8},    // orange
+  {0xFE, 32, 1, 8},    // silver (prototyping)
+  {0xF4, 32, 1, 8},    // silver (prototyping)
+  {0x9D, 32, 1, 8},    // LED door
+  {0x5E, 33, 9, 16},   // yellow
+  {0x5D, 34, 17, 24},  // green
+  {0x92, 35, 25, 32},  // blue
+  {0x70, 36, 33, 40},  // purple
+};
+
+// -------------------------------------------------------------------
+//  OctoWS2811
+// -------------------------------------------------------------------
+
+DMAMEM int displayMemory[pixelsPerStrip * 6];
+int drawingMemory[pixelsPerStrip * 6];
+OctoWS2811 leds(pixelsPerStrip, displayMemory, drawingMemory, ledConfig);
+
+// -------------------------------------------------------------------
+//  State
+// -------------------------------------------------------------------
+
+namespace {
+
+EthernetUDP sacnUdp;
+uint32_t universesReceived = 0;
+bool listening = false;
+uint32_t packetsPerUniverse[maxAssignedUniverses] = {};
+uint16_t assignedUniverseStart = 0;
+uint16_t assignedUniverseEnd = 0;
+uint16_t assignedUniverseCount = 0;
+uint16_t activeUniverseCount = 0;
+bool isTop = false;
+bool firstPacketReceived = false;
+
+}  // namespace
+
+// -------------------------------------------------------------------
+//  Forward declarations
+// -------------------------------------------------------------------
+
+void networkChanged(bool hasIP, bool linkState);
+void startListening();
+void stopListening();
+
+// -------------------------------------------------------------------
+//  IP Resolution
+// -------------------------------------------------------------------
+
+IPAddress resolveStaticIP() {
+  uint8_t mac[6];
+  Ethernet.macAddress(mac);
+  printf("MAC = %02x:%02x:%02x:%02x:%02x:%02x\r\n",
+         mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+  assignedUniverseStart = 0;
+  assignedUniverseEnd = 0;
+  assignedUniverseCount = 0;
+  activeUniverseCount = 0;
+  isTop = false;
+
+  for (const auto& entry : macToIpTable) {
+    if (entry.macLastByte == mac[5]) {
+      IPAddress ip(169, 254, 18, entry.ipLastByte);
+      isTop = (entry.macLastByte == 0xDA);
+      assignedUniverseStart = entry.universeStart;
+      assignedUniverseEnd = entry.universeEnd;
+      if (entry.universeStart > 0 && entry.universeEnd >= entry.universeStart) {
+        assignedUniverseCount = entry.universeEnd - entry.universeStart + 1;
+      }
+      activeUniverseCount = isTop ? 10 : assignedUniverseCount;
+      printf("Matched MAC byte 0x%02X -> %u.%u.%u.%u\r\n",
+             mac[5], ip[0], ip[1], ip[2], ip[3]);
+      if (assignedUniverseCount > 0) {
+        printf("Assigned universes: %u-%u (%u total)\r\n",
+               assignedUniverseStart, assignedUniverseEnd, assignedUniverseCount);
+      } else {
+        printf("Assigned universes: none (disabled)\r\n");
+      }
+      return ip;
+    }
+  }
+
+  printf("WARNING: No IP mapping for MAC byte 0x%02X\r\n", mac[5]);
+  return INADDR_NONE;
+}
+
+// -------------------------------------------------------------------
+//  sACN / E1.31 Packet Handling
+// -------------------------------------------------------------------
+
+// Minimal E1.31 header validation — sufficient for an isolated network.
+// Returns channel count (excluding start code), or 0 if not a valid packet.
+int checkACNHeaders(const uint8_t* msg, int len) {
+  if (len < 126) return 0;
+  // Byte 1: 0x10 (preamble high)
+  // Byte 4: 'A' from "ASC-E1.17"
+  // Byte 12: '7' from "ASC-E1.17"
+  if (msg[1] == 0x10 && msg[4] == 0x41 && msg[12] == 0x37) {
+    int count = msg[123] * 256 + msg[124];  // Property value count
+    return count - 1;                        // Subtract start code
+  }
+  return 0;
+}
+
+void handleSACNPacket(const uint8_t* packet, int packetSize, int channelCount) {
+  if (channelCount > channelsPerUni) {
+    channelCount = channelsPerUni;
+  }
+
+  // E1.31 universe address: byte 113 = high byte, byte 114 = low byte
+  if (packet[113] != 0) return;  // We only use universes 1–255
+
+  uint16_t universe = packet[114];
+  if (assignedUniverseCount == 0 ||
+      universe < assignedUniverseStart ||
+      universe > assignedUniverseEnd) {
+    return;
+  }
+
+  if (isTop) {
+    uint8_t rem = universe % 8;
+    if (rem != 7 && rem != 0) return;
+  }
+
+  if (packet[125] != 0) return;  // DMX start code must be 0
+
+  uint16_t uniIndex;
+  if (isTop) {
+    uniIndex = ((universe - 7) / 8) * 2 + (universe % 8 == 0 ? 1 : 0);
+  } else {
+    uniIndex = universe - assignedUniverseStart;
+  }
+  if (uniIndex >= maxAssignedUniverses) {
+    return;
+  }
+  if (!firstPacketReceived) {
+    firstPacketReceived = true;
+    printf("First sACN packet received (universe %u)\r\n", universe);
+  }
+
+  packetsPerUniverse[uniIndex]++;
+  if (logIncomingPackets &&
+      logEveryNPackets > 0 &&
+      (packetsPerUniverse[uniIndex] % logEveryNPackets) == 0) {
+    printf("RX universe %u: %d channels (%d UDP bytes), packet #%lu\r\n",
+           universe,
+           channelCount,
+           packetSize,
+           static_cast<unsigned long>(packetsPerUniverse[uniIndex]));
+  }
+
+  uint16_t ledOffset;
+  if (isTop) {
+    uint16_t stripIndex = (universe - 7) / 8;
+    uint8_t uniWithinStrip = (universe % 8 == 0) ? 1 : 0;
+    ledOffset = stripIndex * pixelsPerStrip + uniWithinStrip * ledsPerUniverse;
+  } else {
+    ledOffset = uniIndex * ledsPerUniverse;
+  }
+
+  // Copy RGB data into OctoWS2811 pixel buffer
+  int pixelBytes = channelCount;
+  if (pixelBytes > ledsPerUniverse * 3) {
+    pixelBytes = ledsPerUniverse * 3;
+  }
+  for (int i = 0; i < pixelBytes; i += 3) {
+    leds.setPixel(ledOffset + i / 3,
+                  packet[126 + i],
+                  packet[126 + i + 1],
+                  packet[126 + i + 2]);
+  }
+
+  universesReceived |= (1u << uniIndex);
+
+  // Show LEDs once all universes for this frame have arrived
+  if (activeUniverseCount > 0 &&
+      universesReceived == ((1u << activeUniverseCount) - 1u)) {
+    leds.show();
+    universesReceived = 0;
+  }
+}
+
+// -------------------------------------------------------------------
+//  Network State
+// -------------------------------------------------------------------
+
+void startListening() {
+  if (listening) return;
+  if (assignedUniverseCount == 0) {
+    printf("No universes assigned for this node; receiver disabled\r\n");
+    return;
+  }
+
+  if (!sacnUdp.begin(sacnPort)) {
+    printf("ERROR: Failed to bind UDP port %u\r\n", sacnPort);
+    return;
+  }
+
+  universesReceived = 0;
+  firstPacketReceived = false;
+  for (uint16_t i = 0; i < maxAssignedUniverses; ++i) {
+    packetsPerUniverse[i] = 0;
+  }
+
+  listening = true;
+  IPAddress ip = Ethernet.localIP();
+  printf("Listening for unicast sACN on %u.%u.%u.%u:%u universes %u-%u\r\n",
+         ip[0], ip[1], ip[2], ip[3], sacnPort,
+         assignedUniverseStart, assignedUniverseEnd);
+}
+
+void stopListening() {
+  if (listening) {
+    sacnUdp.stop();
+  }
+  listening = false;
+  printf("sACN listener stopped\r\n");
+}
+
+void networkChanged(bool hasIP, bool linkState) {
+  if (!hasIP || !linkState) {
+    stopListening();
+    return;
+  }
+  startListening();
+}
+
+// -------------------------------------------------------------------
+//  Main Program
+// -------------------------------------------------------------------
+
+void setup() {
+  Serial.begin(115200);
+  while (!Serial && millis() < 4000) {
+    // Wait for Serial
+  }
+
+  printf("E1.31 sACN Receiver\r\n");
+  printf("-------------------\r\n");
+
+  // Initialize OctoWS2811
+  leds.begin();
+  for (int i = 0; i < leds.numPixels(); i++) {
+    leds.setPixel(i, 0);
+  }
+  leds.show();
+
+  // Resolve static IP from this Teensy's MAC address
+  IPAddress ip = resolveStaticIP();
+
+  // Register network callbacks before begin()
+  Ethernet.onLinkState([](bool state) {
+    printf("[Ethernet] Link %s\r\n", state ? "ON" : "OFF");
+    networkChanged(Ethernet.localIP() != INADDR_NONE, state);
+  });
+
+  Ethernet.onAddressChanged([]() {
+    IPAddress ip = Ethernet.localIP();
+    bool hasIP = (ip != INADDR_NONE);
+    if (hasIP) {
+      printf("[Ethernet] IP = %u.%u.%u.%u\r\n",
+             ip[0], ip[1], ip[2], ip[3]);
+    } else {
+      printf("[Ethernet] No IP\r\n");
+    }
+    networkChanged(hasIP, Ethernet.linkState());
+  });
+
+  // Start Ethernet
+  if (ip != INADDR_NONE) {
+    IPAddress subnet(255, 255, 255, 0);
+    IPAddress gateway(ip[0], ip[1], ip[2], 1);
+    printf("Starting Ethernet with static IP...\r\n");
+    if (!Ethernet.begin(ip, subnet, gateway)) {
+      printf("ERROR: Failed to start Ethernet\r\n");
+      return;
+    }
+  } else {
+    printf("No static IP found, falling back to DHCP...\r\n");
+    if (!Ethernet.begin()) {
+      printf("ERROR: Failed to start Ethernet\r\n");
+      return;
+    }
+  }
+
+  // With a static IP, the address callback may fire before startListening
+  // is ready, or not at all. Ensure we're listening now.
+  if (Ethernet.localIP() != INADDR_NONE && !listening) {
+    startListening();
+  }
+
+  printf("-------------------\r\n");
+    printf("Universes:      %u",
+      assignedUniverseCount);
+    if (assignedUniverseCount > 0) {
+      printf(" (range %u-%u)", assignedUniverseStart, assignedUniverseEnd);
+    }
+    printf("\r\n");
+  printf("Pixels/strip:   %u (%u universes/strip)\r\n",
+         pixelsPerStrip, universesPerStrip);
+  printf("Active strips:  %u of %u\r\n",
+      (activeUniverseCount + universesPerStrip - 1) / universesPerStrip,
+      numStrips);
+  printf("Total pixels:   %u\r\n",
+      activeUniverseCount * ledsPerUniverse);
+  printf("-------------------\r\n");
+}
+
+void loop() {
+    if (!listening) {
+      return;
+    }
+
+  int packetSize = sacnUdp.parsePacket();
+  if (packetSize > 0) {
+    const uint8_t* data = sacnUdp.data();
+    int channelCount = checkACNHeaders(data, packetSize);
+    if (channelCount > 0) {
+      handleSACNPacket(data, packetSize, channelCount);
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+	"folders": [
+		{
+			"path": "../../.."
+		},
+		{
+			"name": "Picodome",
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"cstddef": "cpp"
+		},
+		"chat.tools.terminal.autoApprove": {
+			"/^python - <<'EOF'\nimport os\n\nfolder = r\"e:\\\\git\\\\bermuda\\\\td\\\\playlists\\\\chill-test-0329\"\nfixed = \\[\\]\n\nfor fname in sorted\\(os\\.listdir\\(folder\\)\\):\n    if not fname\\.endswith\\('\\.csv'\\):\n        continue\n    path = os\\.path\\.join\\(folder, fname\\)\n    with open\\(path, newline='', encoding='utf-8'\\) as f:\n        lines = \\[l\\.rstrip\\('\\\\n'\\)\\.rstrip\\('\\\\r'\\) for l in f\\]\n\n    if len\\(lines\\) <= 1:\n        continue\n\n    header = lines\\[0\\]\n    data_lines = \\[l for l in lines\\[1:\\] if l\\.strip\\(\\)\\]\n\n    # deduplicate while preserving first-occurrence order\n    seen = set\\(\\)\n    deduped = \\[\\]\n    for line in data_lines:\n        if line not in seen:\n            seen\\.add\\(line\\)\n            deduped\\.append\\(line\\)\n\n    if len\\(deduped\\) == len\\(data_lines\\):\n        continue  # no change needed\n\n    with open\\(path, 'w', encoding='utf-8', newline=''\\) as f:\n        f\\.write\\(header \\+ '\\\\n'\\)\n        for line in deduped:\n            f\\.write\\(line \\+ '\\\\n'\\)\n\n    fixed\\.append\\(\"\\{\\}: \\{\\} -> \\{\\} rows\"\\.format\\(fname, len\\(data_lines\\), len\\(deduped\\)\\)\\)\n\nif fixed:\n    print\\(\"Fixed \\{\\} files:\"\\.format\\(len\\(fixed\\)\\)\\)\n    for f in fixed:\n        print\\(\" \", f\\)\nelse:\n    print\\(\"Nothing to fix\\.\"\\)\nEOF\n$/": {
+				"approve": true,
+				"matchCommandLine": true
+			},
+			"/^python write_isf\\.py \"sdcGRX psychedelic tube\"$/": {
+				"approve": true,
+				"matchCommandLine": true
+			}
+		},
+		"workbench.colorCustomizations": {
+			"activityBar.activeBackground": "#5a1b40",
+			"activityBar.background": "#5a1b40",
+			"activityBar.foreground": "#e7e7e7",
+			"activityBar.inactiveForeground": "#e7e7e799",
+			"activityBarBadge.background": "#577b25",
+			"activityBarBadge.foreground": "#e7e7e7",
+			"commandCenter.border": "#e7e7e799",
+			"sash.hoverBorder": "#5a1b40",
+			"statusBar.background": "#330f24",
+			"statusBar.foreground": "#e7e7e7",
+			"statusBarItem.hoverBackground": "#5a1b40",
+			"statusBarItem.remoteBackground": "#330f24",
+			"statusBarItem.remoteForeground": "#e7e7e7",
+			"titleBar.activeBackground": "#330f24",
+			"titleBar.activeForeground": "#e7e7e7",
+			"titleBar.inactiveBackground": "#330f2499",
+			"titleBar.inactiveForeground": "#e7e7e799"
+		},
+		"peacock.color": "#330f24"
+	}
+}

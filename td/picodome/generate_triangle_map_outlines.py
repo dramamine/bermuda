@@ -57,22 +57,17 @@ OUTLINE_DISTANCES = [1.0, 0.8, 0.6, 0.4, 0.2]  # fraction of center-to-corner di
 OUTLINE_PREFIXES = ['a', 'b', 'c', 'd', 'e']
 
 
-def onTableChange(dat: DAT, prevDAT: DAT, info: ChangedDATInfo):
-	"""
-	Called when a table change occurs. For each source row, generates
-	NUM_OUTLINES rows with the corner coordinate scaled to a decreasing
-	percentage of the center-to-corner distance, plus lengths columns.
+def rebuild_table():
+	"""Rebuild triangle_map_table from the given source DAT and map_triangle_segment_lengths.
+
+	For each source row, generates NUM_OUTLINES rows with the corner coordinate
+	scaled to a decreasing percentage of the center-to-corner distance, plus lengths columns.
 
 	Input columns:  triangle_idx, center.x, center.y, corner.x, corner.y
 	Output columns: triangle_idx, center.x, center.y, corner.x, corner.y,
 	                outline_idx, lengths.a, lengths.b, lengths.c
-
-	Args:
-		dat: The changed DAT
-		prevDAT: The DAT containing previous contents
-		info: ChangedDATInfo object with specific details on what changed
 	"""
-	print("table changed")
+	dat = op('triangle_map_table2')
 	output = op('triangle_map_table')
 	lengths_table = op('map_triangle_segment_lengths')
 
@@ -96,6 +91,7 @@ def onTableChange(dat: DAT, prevDAT: DAT, info: ChangedDATInfo):
 		# Find this triangle's row in the segment lengths table
 		tri_row = None
 		for r in range(1, lengths_table.numRows):
+			print(f"Checking lengths_table row {r} with triangle_idx {lengths_table[r, 'triangle_idx'].val} against {triangle_idx}")
 			if int(lengths_table[r, 'triangle_idx']) == triangle_idx:
 				tri_row = r
 				break
@@ -118,6 +114,11 @@ def onTableChange(dat: DAT, prevDAT: DAT, info: ChangedDATInfo):
 				outline_idx, len_a, len_b, len_c
 			])
 
+
+def onTableChange(dat: DAT, prevDAT: DAT, info: ChangedDATInfo):
+	"""Called when the source table changes. Rebuilds triangle_map_table."""
+	print("table changed so I'm generating triangle map outlines")
+	rebuild_table()
 	return
 
 # The following legacy callbacks can be used to track individual changes.

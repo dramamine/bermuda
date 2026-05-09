@@ -27,4 +27,7 @@ def onValueChange(channel, sampleIndex, val, prev):
   mod("/project1/ui_container/resolume_container/sld_resolume_commands").set_dashboard_value(
     1, 3, val
   )
+  mod("/project1/ui_container/resolume_container/sld_resolume_commands").set_dashboard_value(
+    4, 3, val
+  )
   return
