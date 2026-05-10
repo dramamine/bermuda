@@ -202,147 +202,139 @@ dashboard_effects = [
 ]
 
 
-# get the effects above where the intensity is 0
-effects_by_intensity = [
-    [e for e in effects if e[0] == 0],
-    [e for e in effects if e[0] == 1],
-    [e for e in effects if e[0] == 2],
-]
-
-
 IntensityTemplate = namedtuple('IntensityTemplate', [
     "active_layers",
     "clip_intensity",
-    "effect_count_by_intensity",
+    "effect_intensity",
 ])
 
 intensity_templates = [
     # 0-4
-    [IntensityTemplate(1, 0, (0, 0, 0))],
-    [IntensityTemplate(1, 0, (0, 0, 0))],
+    [IntensityTemplate(1, 0, 0)],
+    [IntensityTemplate(1, 0, 0)],
     [  # 0 or 1 simple effect
-        IntensityTemplate(1, 0, (0, 0, 0)),
-        IntensityTemplate(1, 0, (0, 0, 0)),
-        IntensityTemplate(1, 0, (1, 0, 0))
+        IntensityTemplate(1, 0, 0),
+        IntensityTemplate(1, 0, 0),
+        IntensityTemplate(1, 0, 1)
     ],
-    [IntensityTemplate(1, 1, (2, 0, 0))],
-    [IntensityTemplate(2, 0, (1, 0, 0))],
+    [IntensityTemplate(1, 1, 2)],
+    [IntensityTemplate(2, 0, 1)],
 
     # 5
     [
-        IntensityTemplate(1, 1, (1, 1, 0)),
-        IntensityTemplate(1, 1, (2, 0, 0)),
-        IntensityTemplate(2, 1, (2, 0, 0)),
-        IntensityTemplate(2, 1, (1, 0, 0)),
+        IntensityTemplate(1, 1, 3),
+        IntensityTemplate(1, 1, 2),
+        IntensityTemplate(2, 1, 2),
+        IntensityTemplate(2, 1, 1),
     ],
 
     # 6
     [
-        IntensityTemplate(1, 2, (1, 1, 0)),
-        IntensityTemplate(1, 2, (2, 0, 0)),
-        IntensityTemplate(2, 1, (1, 1, 0)),
-        IntensityTemplate(2, 1, (2, 0, 0)),
+        IntensityTemplate(1, 2, 3),
+        IntensityTemplate(1, 2, 2),
+        IntensityTemplate(2, 1, 3),
+        IntensityTemplate(2, 1, 2),
     ],
 
     # 7
     [
-        IntensityTemplate(2, 2, (1, 1, 0)),
-        IntensityTemplate(2, 2, (2, 0, 0)),
-        IntensityTemplate(2, 3, (1, 1, 0)),
-        IntensityTemplate(2, 3, (2, 0, 0)),
+        IntensityTemplate(2, 2, 3),
+        IntensityTemplate(2, 2, 2),
+        IntensityTemplate(2, 3, 3),
+        IntensityTemplate(2, 3, 2),
     ],
 
     # 8
     [
-        IntensityTemplate(2, 2, (2, 1, 0)),
-        IntensityTemplate(2, 2, (3, 0, 0)),
-        IntensityTemplate(2, 3, (1, 1, 0)),
-        IntensityTemplate(2, 3, (2, 0, 0)),
+        IntensityTemplate(2, 2, 4),
+        IntensityTemplate(2, 2, 3),
+        IntensityTemplate(2, 3, 3),
+        IntensityTemplate(2, 3, 2),
     ],
 
     # 9
     [
-        IntensityTemplate(3, 2, (1, 1, 0)),
-        IntensityTemplate(3, 2, (2, 0, 0)),
-        IntensityTemplate(3, 3, (1, 0, 0)),
-        IntensityTemplate(3, 3, (1, 0, 0)),
+        IntensityTemplate(3, 2, 3),
+        IntensityTemplate(3, 2, 2),
+        IntensityTemplate(3, 3, 1),
+        IntensityTemplate(3, 3, 1),
     ],
 
     # 10
     [
-        IntensityTemplate(2, 4, (1, 0, 0)),
-        IntensityTemplate(3, 3, (1, 0, 0)),
+        IntensityTemplate(2, 4, 1),
+        IntensityTemplate(3, 3, 1),
     ],
 
     # 11
     [
-        IntensityTemplate(2, 4, (1, 1, 0)),
-        IntensityTemplate(2, 4, (2, 0, 0)),
-        IntensityTemplate(3, 3, (1, 1, 0)),
-        IntensityTemplate(3, 3, (2, 0, 0)),
+        IntensityTemplate(2, 4, 3),
+        IntensityTemplate(2, 4, 2),
+        IntensityTemplate(3, 3, 3),
+        IntensityTemplate(3, 3, 2),
     ],
 
     # 12
     [
-        IntensityTemplate(2, 4, (1, 1, 1)),
-        IntensityTemplate(2, 4, (2, 1, 0)),
-        IntensityTemplate(2, 4, (3, 0, 0)),
-        IntensityTemplate(3, 3, (1, 1, 1)),
-        IntensityTemplate(3, 3, (2, 1, 0)),
-        IntensityTemplate(3, 3, (3, 0, 0)),
+        IntensityTemplate(2, 4, 6),
+        IntensityTemplate(2, 4, 4),
+        IntensityTemplate(2, 4, 3),
+        IntensityTemplate(3, 3, 6),
+        IntensityTemplate(3, 3, 4),
+        IntensityTemplate(3, 3, 3),
     ],
 
     # 13
     [
-        IntensityTemplate(2, 4, (2, 1, 1)),
-        IntensityTemplate(2, 4, (3, 1, 0)),
-        IntensityTemplate(3, 3, (2, 1, 1)),
-        IntensityTemplate(3, 3, (3, 1, 0)),
+        IntensityTemplate(2, 4, 7),
+        IntensityTemplate(2, 4, 5),
+        IntensityTemplate(3, 3, 7),
+        IntensityTemplate(3, 3, 5),
     ],
 
     # 14
     [
-        IntensityTemplate(2, 4, (2, 2, 1)),
-        IntensityTemplate(2, 4, (3, 2, 0)),
-        IntensityTemplate(3, 3, (2, 2, 1)),
-        IntensityTemplate(3, 3, (3, 2, 0)),
+        IntensityTemplate(2, 4, 9),
+        IntensityTemplate(2, 4, 7),
+        IntensityTemplate(3, 3, 9),
+        IntensityTemplate(3, 3, 7),
     ],
 
     # 15
     [
-        IntensityTemplate(3, 3,  (3, 1, 1)),
-        IntensityTemplate(3, 3,  (3, 2, 1))
+        IntensityTemplate(3, 3, 8),
+        IntensityTemplate(3, 3, 10)
     ],
 
     # 16
     [
-        IntensityTemplate(3, 3,  (4, 1, 0)),
-        IntensityTemplate(3, 3,  (4, 0, 1)),
-        IntensityTemplate(3, 3,  (3, 1, 1)),
+        IntensityTemplate(3, 3, 6),
+        IntensityTemplate(3, 3, 7),
+        IntensityTemplate(3, 3, 8),
     ],
 
     # 17
     [
-        IntensityTemplate(3, 4,  (3, 1, 0)),
-        IntensityTemplate(3, 4,  (3, 0, 1)),
-        IntensityTemplate(3, 4,  (2, 1, 1)),
+        IntensityTemplate(3, 4, 5),
+        IntensityTemplate(3, 4, 6),
+        IntensityTemplate(3, 4, 7),
     ],
 
     # 18
     [
-        IntensityTemplate(3, 4,  (4, 1, 0)),
-        IntensityTemplate(3, 4,  (4, 0, 1)),
-        IntensityTemplate(3, 4,  (3, 1, 1)),
+        IntensityTemplate(3, 4, 6),
+        IntensityTemplate(3, 4, 7),
+        IntensityTemplate(3, 4, 8),
     ],
 
     # 19
     [
-        IntensityTemplate(3, 4,  (5, 1, 0)),
-        IntensityTemplate(3, 4,  (5, 0, 1)),
-        IntensityTemplate(3, 4,  (4, 1, 1)),
-        IntensityTemplate(3, 4,  (4, 2, 0)),
-        IntensityTemplate(3, 4,  (4, 1, 1)),
-        IntensityTemplate(3, 4,  (3, 2, 1)),
+        IntensityTemplate(3, 4, 7),
+        IntensityTemplate(3, 4, 8),
+        IntensityTemplate(3, 4, 9),
+        IntensityTemplate(3, 4, 8),
+        IntensityTemplate(3, 4, 9),
+        IntensityTemplate(3, 4, 10),
     ],
 ]
 
@@ -427,10 +419,10 @@ class ActiveStuff:
 
   def stringify_my_choices(self, mb, clips, fx):
     global effects_state
-    mb_string = "layers: {}, clip_intensity (0-4): {}, effect_count_by_intensity: {}".format(
+    mb_string = "layers: {}, clip_intensity (0-4): {}, effect_intensity: {}".format(
         mb.active_layers,
         mb.clip_intensity,
-        mb.effect_count_by_intensity,
+        mb.effect_intensity,
     )
     clips_string = "  CLIPS:" + \
         ", ".join(["({} i{})".format(c[1], c[0]) for c in clips])
@@ -442,14 +434,16 @@ class ActiveStuff:
 
   def _pick_effects(self):
     fx = []
-    effect_count_by_intensity = self.mb.effect_count_by_intensity
+    budget = self.mb.effect_intensity
     has_reactive_effect = False
-    for i in range(3):
-      for _ in range(effect_count_by_intensity[i]):
-        chosen_effect = random.choice(effects_by_intensity[i])
-        fx.append(chosen_effect)
-        if len(chosen_effect) > 3 and chosen_effect[3]:
-          has_reactive_effect = True
+    affordable = [e for e in effects if e[0] + 1 <= budget]
+    while affordable:
+      chosen_effect = random.choice(affordable)
+      fx.append(chosen_effect)
+      budget -= chosen_effect[0] + 1
+      if len(chosen_effect) > 3 and chosen_effect[3]:
+        has_reactive_effect = True
+      affordable = [e for e in effects if e[0] + 1 <= budget]
 
     # add dashboard effect if we didn't get one already.
     # TODO consider adding something like this for audio-reactive effects
@@ -642,7 +636,7 @@ class ActiveStuff:
     return
 
 
-ast = ActiveStuff(IntensityTemplate(2, 0, (1, 0, 0)))
+ast = ActiveStuff(IntensityTemplate(2, 0, 1))
 
 
 def load_pattern_and_play(transition_time=2):
