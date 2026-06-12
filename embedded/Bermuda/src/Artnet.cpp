@@ -87,6 +87,9 @@ uint16_t Artnet::read()
       }
 
       opcode = artnetPacket[8] | artnetPacket[9] << 8;
+      sequence = 0;
+      incomingUniverse = 0;
+      dmxDataLength = 0;
 
       if (opcode == ART_DMX)
       {
@@ -95,13 +98,14 @@ uint16_t Artnet::read()
         dmxDataLength = artnetPacket[17] | artnetPacket[16] << 8;
 
         if (artDmxCallback) (*artDmxCallback)(incomingUniverse, dmxDataLength, sequence, artnetPacket + ART_DMX_START);
-        return ART_DMX;
+        return opcode;
       }
       if (opcode == ART_POLL)
       {
-        return ART_POLL;
+        return opcode;
       }
-      return 0;
+      // Return any other valid Art-Net opcode so callers can handle custom schemas.
+      return opcode;
   }
   else
   {

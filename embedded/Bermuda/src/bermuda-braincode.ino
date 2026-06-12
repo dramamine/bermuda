@@ -59,14 +59,18 @@ using namespace qindesign::network;
 // i.e. how many strips; Octo board supports 8 channels out
 #define LED_HEIGHT 8
 
-#define version "2026.04"
+#define version "2026.06-beta"
 
 // make sure the config above is correct for your setup. we expect the controlling
 // software  to send (LED_HEIGHT * universesPerStrip) universes to this IP.
 const int ledsPerUniverse = 170;
 
 // Send fps timing to Serial out, should be around 40 fps
-bool showFps = true;
+bool showFps = false;
+
+// Custom Art-Net opcode for Bermuda alignment/control payloads.
+// Art-Net opcodes are little-endian on the wire.
+const uint16_t ART_BERMUDA_ALIGN = 0x7A01;
 
 // how long is our update look taking to render?
 // for reference: runs about 12us for regular, 32-universe code
@@ -152,35 +156,29 @@ int layerDescription[13][5] = {
   {1, 999, 6, 5, 0}
 };
 
-int adjustmentLayers[9][13] = {
-  {0, -2, -2, -2, -1, -2, -1, -1, -1, 0, 0, 0, 0}, // 4/20/2025 leftward slightly off
-  {0, 0, -2, 1, -1, 0, -1, 1, -1, 2, 2, 2, 0}, // default
-  {0, -1, -2, -1, 0, 1, 1, 2, 1, 3, 4, 4, 4}, // 5/31/2025 confirmed
-  {0, -1, -2, -1, 0, 1, 2, 3, 2, 5, 5, 6, 5}, // 5/31/2025 confirmed
-  {0, 0, -1, 1, 2, 3, 5, 5, 6, 8, 10, 10, 10}, // 4/12/2025 rightward trunk modified
-  {0, 0,  0,  0, 2, 4, 6, 8, 9, 11, 15, 16, 15}, // guess
-  {0, 0,  0,  2, 4, 7, 9, 11, 12, 14, 18, 18, 20}, // guess
-  {0, 0,  0,  3, 5, 7, 9, 12, 14, 16, 20, 21, 23}, // 4/16/2025 rightward started 2 lanes early
-  {0, 0,  1,  4, 6, 8, 11, 14, 16, 18, 22, 23, 25}, // 5/27/2025 guess: slightly more
+// Per-triangle alignment offsets. Rows are triangles [0..7], columns are layers [0..12].
+int8_t triangleAlignment[8][13] = {
+  {0, 0, -2, 1, -1, 0, -1, 1, -1, 2, 2, 2, 0},
+  {0, 0, -2, 1, -1, 0, -1, 1, -1, 2, 2, 2, 0},
+  {0, 0, -2, 1, -1, 0, -1, 1, -1, 2, 2, 2, 0},
+  {0, 0, -2, 1, -1, 0, -1, 1, -1, 2, 2, 2, 0},
+  {0, 0, -2, 1, -1, 0, -1, 1, -1, 2, 2, 2, 0},
+  {0, 0, -2, 1, -1, 0, -1, 1, -1, 2, 2, 2, 0},
+  {0, 0, -2, 1, -1, 0, -1, 1, -1, 2, 2, 2, 0},
+  {0, 0, -2, 1, -1, 0, -1, 1, -1, 2, 2, 2, 0},
 };
 
 namespace Alignment {
-  int ALIGNMENT_CHOICES = 9;
-  int alignmentChoice[] = {0, 0, 0, 0, 0, 0, 0, 0};
   // 0: no alignment pattern
   // 1-8: show alignment pattern on a single triangle 1-8
   // 9: show alignment pattern on all triangles
   int alignmentSelection = 0;
 
   int _lookupAdjustment(int layer, int whichTriangle) {
-    // which adjustment are we using?
-    int adjIdx = alignmentChoice[whichTriangle];
-    // if (whichTriangle == 0) {
-    //   Serial.printf("Using adjustment index: %d\n", adjIdx);
-    // }
-
-    // look up by layer
-    return adjustmentLayers[adjIdx][layer];
+    if (whichTriangle < 0 || whichTriangle >= 8 || layer < 0 || layer >= 13) {
+      return 0;
+    }
+    return triangleAlignment[whichTriangle][layer];
   }
 }
 
@@ -373,18 +371,19 @@ namespace Pattern {
 
 namespace Networking {
   // Teensy serial to IP address
-  const byte pairs = 9;
-  int _macToIpPairs[pairs][2] = {
+  int _macToIpPairs[][2] = {
     {0xCB, 31}, // 00-15-B5-CB red i.e. "top"
     {0xDA, 32}, // 00-10-16-DA orange
     {0xFE, 32}, // 00-0C-35-FE silver (general prototyping)
     {0xF4, 32}, // 00-0C-35-FE silver (general prototyping)
+    {0x18, 32}, // 00-0C-35-FE silver (backup from Bermuda bin)
     {0x9D, 32}, // LED door
     {0x5E, 33}, // 00-0C-46-5E yellow
     {0x5D, 34}, // 00-0C-46-5D green - motherbrain
     {0x92, 35}, // 00-0C-46-92 blue
     {0x70, 36}, // 00-0C-46-70 purple
   };
+  const byte pairs = sizeof(_macToIpPairs) / sizeof(_macToIpPairs[0]);
 
   // Change ip for your setup, last octet is changed in updateIp()
   byte _ip[] = {169, 254, 18, 0};
@@ -476,71 +475,6 @@ namespace Networking {
     );
   }
 
-
-
-  int ctr = 0;
-  // @TODO consider move this to alignment namespace
-  void _considerUpdateMapping(uint8_t *frame, int uni) {
-    int uniOffset = uni % 3;
-    int whichTriangle = uni / 3;
-
-    if (whichTriangle > 0) {
-      return;
-    }
-    if (uniOffset > 0) {
-      return;
-    }
-    ctr++;
-    if (ctr < 201) {
-      return;
-    }
-    ctr = 0;
-
-    // Serial.printf("update mapping running: %d %d \n", uniOffset, whichTriangle);
-    // Serial.printf("My frame values are now: (%d) %d %d %d %d %d %d %d %d (%d) \n",
-    //   frame[494],
-    //   frame[495],
-    //   frame[496],
-    //   frame[497],
-    //   frame[498],
-    //   frame[499],
-    //   frame[500],
-    //   frame[501],
-    //   frame[502],
-    //   frame[503]
-    // );
-
-    for (int i=0; i<8; i++) {
-      int fdx = 495 + i;
-      int fval = round(frame[fdx]/16);
-      if (fval < Alignment::ALIGNMENT_CHOICES) { // max limit for options
-        Alignment::alignmentChoice[i] = fval;
-      } else {
-        // Serial.printf("Got value outside acceptable range: %d %d", frame[fdx], fval);
-      }
-    }
-
-    int oldValue = Alignment::alignmentSelection;
-    Alignment::alignmentSelection = round(frame[503] / 16);
-    if (oldValue != Alignment::alignmentSelection) {
-      Pattern::_blankEverything();
-      // Serial.printf("Alignment selection changed from %d to %d\n", oldValue, Alignment::alignmentSelection);
-    }
-
-    // Serial.printf("My alignment choices are now: %d %d %d %d %d %d %d %d \n",
-    //   Alignment::alignmentChoice[0],
-    //   Alignment::alignmentChoice[1],
-    //   Alignment::alignmentChoice[2],
-    //   Alignment::alignmentChoice[3],
-    //   Alignment::alignmentChoice[4],
-    //   Alignment::alignmentChoice[5],
-    //   Alignment::alignmentChoice[6],
-    //   Alignment::alignmentChoice[7]
-    // );
-
-
-  }
-
   void updateLeds(int uni) {
     uint8_t *frame = artnet.getDmxFrame();
 
@@ -558,8 +492,6 @@ namespace Networking {
         // why?? does this happen?
         continue;
       }
-
-      _considerUpdateMapping(frame, uni);
 
       int dmxPosition = layerDescription[i][1];
 
@@ -721,6 +653,62 @@ namespace Networking {
       memset(universesReceived, 0, maxUniverses);
     }
   }
+
+  void logCustomArtPacket(uint16_t opcode) {
+    uint16_t packetSize = artnet.getPacketSize();
+    uint8_t *payload = artnet.getPacketPayload();
+
+    // Payload format:
+    // [0]     triangle_idx (0..7 update, 8 = disable test pattern)
+    // [1..13] 13 signed alignment values for triangle 0..7
+    const uint16_t expectedUpdatePayloadBytes = 14;
+    const uint16_t artNetHeaderBytes = 10;
+    if (packetSize < artNetHeaderBytes + 1) {
+      Serial.printf(
+        "CUSTOM: opcode=0x%04X packet too short (%u bytes, need >= %u)\n",
+        opcode,
+        packetSize,
+        artNetHeaderBytes + 1
+      );
+      return;
+    }
+
+    uint8_t triangleIdx = payload[0];
+
+    if (triangleIdx == 8) {
+      Alignment::alignmentSelection = 0;
+      Serial.printf("CUSTOM: opcode=0x%04X triangle_idx=8 -> test pattern OFF\n", opcode);
+      return;
+    }
+
+    if (triangleIdx > 7) {
+      Serial.printf("CUSTOM: opcode=0x%04X invalid triangle_idx=%u (expected 0..8)\n", opcode, triangleIdx);
+      return;
+    }
+
+    if (packetSize < artNetHeaderBytes + expectedUpdatePayloadBytes) {
+      Serial.printf(
+        "CUSTOM: opcode=0x%04X packet too short for update (%u bytes, need >= %u)\n",
+        opcode,
+        packetSize,
+        artNetHeaderBytes + expectedUpdatePayloadBytes
+      );
+      return;
+    }
+
+    Alignment::alignmentSelection = 9;
+    Serial.printf("CUSTOM: opcode=0x%04X triangle_idx=%u alignment=[", opcode, triangleIdx);
+    for (uint8_t i = 0; i < 13; i++) {
+      int8_t signedVal = static_cast<int8_t>(payload[i + 1]);
+      triangleAlignment[triangleIdx][i] = signedVal;
+      Serial.print(signedVal);
+      if (i < 12) {
+        Serial.print(", ");
+      }
+    }
+    Serial.println("]");
+  }
+
   void loop() {
     if (isArtnetListening) {
       uint16_t r = artnet.read();
@@ -739,6 +727,8 @@ namespace Networking {
         }
 
         Networking::handleDmxFrame();
+      } else if (r == ART_BERMUDA_ALIGN) {
+        Networking::logCustomArtPacket(r);
       }
     }
   }

@@ -87,6 +87,22 @@ public:
     return dmxDataLength;
   }
 
+  inline uint16_t getPacketSize(void)
+  {
+    return packetSize;
+  }
+
+  inline uint8_t* getPacket(void)
+  {
+    return artnetPacket;
+  }
+
+  inline uint8_t* getPacketPayload(void)
+  {
+    // Payload starts after 8-byte Art-Net ID and 2-byte opcode.
+    return artnetPacket + 10;
+  }
+
   inline void setArtDmxCallback(void (*fptr)(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data))
   {
     artDmxCallback = fptr;
