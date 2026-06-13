@@ -50,6 +50,7 @@ https://www.pjrc.com/teensy/td_libs_OctoWS2811.html
 #include "Artnet.h"
 // not needed anymore: #include <SPI.h>
 #include <OctoWS2811.h>
+#include <EEPROM.h>
 
 using namespace qindesign::network;
 
@@ -59,7 +60,7 @@ using namespace qindesign::network;
 // i.e. how many strips; Octo board supports 8 channels out
 #define LED_HEIGHT 8
 
-#define version "2026.06-beta"
+#define version "2026.06.13"
 
 // make sure the config above is correct for your setup. we expect the controlling
 // software  to send (LED_HEIGHT * universesPerStrip) universes to this IP.
@@ -169,6 +170,13 @@ int8_t triangleAlignment[8][13] = {
 };
 
 namespace Alignment {
+  const uint8_t TRIANGLES = 8;
+  const uint8_t LAYERS = 13;
+  const uint16_t ALIGNMENT_BYTES = TRIANGLES * LAYERS;
+  const uint16_t EEPROM_MAGIC_ADDR = 0;
+  const uint16_t EEPROM_DATA_ADDR = EEPROM_MAGIC_ADDR + sizeof(uint32_t);
+  const uint32_t EEPROM_MAGIC = 0xBADA5510;
+
   // 0: no alignment pattern
   // 1-8: show alignment pattern on a single triangle 1-8
   // 9: show alignment pattern on all triangles
@@ -179,6 +187,45 @@ namespace Alignment {
       return 0;
     }
     return triangleAlignment[whichTriangle][layer];
+  }
+
+  bool loadFromEeprom() {
+    uint32_t magic = 0;
+    EEPROM.get(EEPROM_MAGIC_ADDR, magic);
+    if (magic != EEPROM_MAGIC) {
+      return false;
+    }
+
+    Serial.printf("PERSIST: EEPROM magic ok (0x%08lX). Loading alignment matrix...\n",
+                  static_cast<unsigned long>(magic));
+
+    int addr = EEPROM_DATA_ADDR;
+    for (uint8_t t = 0; t < TRIANGLES; t++) {
+      Serial.printf("PERSIST: EEPROM triangle %u = [", t);
+      for (uint8_t l = 0; l < LAYERS; l++) {
+        triangleAlignment[t][l] = static_cast<int8_t>(EEPROM.read(addr));
+        Serial.print(triangleAlignment[t][l]);
+        if (l + 1 < LAYERS) {
+          Serial.print(", ");
+        }
+        addr++;
+      }
+      Serial.println("]");
+    }
+
+    return true;
+  }
+
+  void saveToEeprom() {
+    EEPROM.put(EEPROM_MAGIC_ADDR, EEPROM_MAGIC);
+
+    int addr = EEPROM_DATA_ADDR;
+    for (uint8_t t = 0; t < TRIANGLES; t++) {
+      for (uint8_t l = 0; l < LAYERS; l++) {
+        EEPROM.update(addr, static_cast<uint8_t>(triangleAlignment[t][l]));
+        addr++;
+      }
+    }
   }
 }
 
@@ -654,6 +701,20 @@ namespace Networking {
     }
   }
 
+  void setHasReceivedArtnetPacket() {
+    if (!Networking::hasReceivedArtnetPacket)
+    {
+      Serial.println("STATUS: Receiving network control data.");
+      Networking::hasReceivedArtnetPacket = true;
+      // black out each LED once when network control starts
+      for (int i = 0; i < numLeds; i++)
+      {
+        leds.setPixel(i, 0, 0, 0);
+      }
+      leds.show();
+    }
+  }
+
   void logCustomArtPacket(uint16_t opcode) {
     uint16_t packetSize = artnet.getPacketSize();
     uint8_t *payload = artnet.getPacketPayload();
@@ -678,6 +739,10 @@ namespace Networking {
     if (triangleIdx == 8) {
       Alignment::alignmentSelection = 0;
       Serial.printf("CUSTOM: opcode=0x%04X triangle_idx=8 -> test pattern OFF\n", opcode);
+      Alignment::saveToEeprom();
+      Serial.println("PERSIST: Saved alignment matrix to EEPROM.");
+      Pattern::_blankEverything();
+      leds.show();
       return;
     }
 
@@ -707,27 +772,19 @@ namespace Networking {
       }
     }
     Serial.println("]");
+
+    // Apply the updated alignment visually right away, even before DMX arrives.
+    Pattern::_doAlignmentPattern();
   }
 
   void loop() {
     if (isArtnetListening) {
       uint16_t r = artnet.read();
       if (r == ART_DMX) {
-        // system state update
-        if (!Networking::hasReceivedArtnetPacket)
-        {
-          Serial.println("STATUS: Receiving Artnet data.");
-          Networking::hasReceivedArtnetPacket = true;
-          // black out each LED
-          for (int i = 0; i < numLeds; i++)
-          {
-            leds.setPixel(i, 0, 0, 0);
-          }
-          leds.show();
-        }
-
+        Networking::setHasReceivedArtnetPacket();
         Networking::handleDmxFrame();
       } else if (r == ART_BERMUDA_ALIGN) {
+        Networking::setHasReceivedArtnetPacket();
         Networking::logCustomArtPacket(r);
       }
     }
@@ -742,11 +799,19 @@ void setup()
   Serial.printf("INFO:   LED counter: %d pixels, %d LEDs \n", leds.numPixels(), numLeds);
   Serial.println();
 
+  if (Alignment::loadFromEeprom()) {
+    Serial.println("PERSIST: Restored alignment matrix from EEPROM.");
+  } else {
+    Serial.println("PERSIST: No saved alignment found; using compiled defaults.");
+  }
+
   leds.begin();
   Pattern::setup();
   Pattern::intro();
 
-  SerialVisualizerSender::setup();
+  if (serialVisualizerEnabled) {
+    SerialVisualizerSender::setup();
+  }
 
   Networking::setup();
 }
